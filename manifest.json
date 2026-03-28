@@ -1,0 +1,67 @@
+{
+  "manifest_version": 3,
+  "name": "Rewoven Shopping Lens",
+  "version": "1.0.0",
+  "description": "Analyze the environmental impact and sustainability of clothing while you shop online.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.zara.com/*",
+        "*://*.hm.com/*",
+        "*://*.www2.hm.com/*",
+        "*://*.asos.com/*",
+        "*://*.nike.com/*",
+        "*://*.shein.com/*",
+        "*://*.uniqlo.com/*",
+        "*://*.gap.com/*",
+        "*://*.forever21.com/*",
+        "*://*.urbanoutfitters.com/*",
+        "*://*.nordstrom.com/*",
+        "*://*.boohoo.com/*",
+        "*://*.prettylittlething.com/*",
+        "*://*.fashionnova.com/*",
+        "*://*.mango.com/*"
+      ],
+      "js": ["content/index.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://*.zara.com/*",
+    "*://*.hm.com/*",
+    "*://*.asos.com/*",
+    "*://*.nike.com/*",
+    "*://*.shein.com/*",
+    "*://*.uniqlo.com/*",
+    "*://*.gap.com/*",
+    "*://*.forever21.com/*",
+    "*://*.urbanoutfitters.com/*",
+    "*://*.nordstrom.com/*",
+    "*://*.boohoo.com/*",
+    "*://*.prettylittlething.com/*",
+    "*://*.fashionnova.com/*",
+    "*://*.mango.com/*"
+  ]
+}

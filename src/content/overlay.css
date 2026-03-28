@@ -1,0 +1,11 @@
+/* This file is intentionally minimal - all overlay styles are in the Shadow DOM */
+/* This prevents any style conflicts with retailer websites */
+#rewoven-lens-root {
+  all: initial !important;
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  top: 0 !important;
+  right: 0 !important;
+  height: 100vh !important;
+  pointer-events: none !important;
+}

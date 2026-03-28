@@ -1,0 +1,15 @@
+{
+  "name": "rewoven-shopping-lens",
+  "version": "1.0.0",
+  "description": "Rewoven Shopping Lens - Analyze the sustainability of clothing while you shop",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "typescript": "^5.4.0",
+    "@types/chrome": "^0.0.268"
+  }
+}
