@@ -1,6 +1,7 @@
 import type { ScoringResult, ScrapedProduct } from '../shared/types';
 import { GRADE_COLORS } from '../shared/constants';
 import { getCostPerWearLabel } from '../scoring/cost-per-wear';
+import type { BrandRating } from '../api/brand-client';
 
 const ROOT_ID = 'rewoven-lens-root';
 let shadowRoot: ShadowRoot | null = null;
@@ -13,7 +14,7 @@ export function removeOverlay() {
   isExpanded = false;
 }
 
-export function createOverlay(result: ScoringResult, product: ScrapedProduct) {
+export function createOverlay(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null) {
   removeOverlay();
 
   const host = document.createElement('div');
@@ -22,7 +23,7 @@ export function createOverlay(result: ScoringResult, product: ScrapedProduct) {
   document.body.appendChild(host);
 
   shadowRoot = host.attachShadow({ mode: 'open' });
-  shadowRoot.innerHTML = getOverlayHTML(result, product);
+  shadowRoot.innerHTML = getOverlayHTML(result, product, apiBrandRating);
 
   // Add event listeners
   const badge = shadowRoot.querySelector('.rw-badge') as HTMLElement;
@@ -42,15 +43,15 @@ export function createOverlay(result: ScoringResult, product: ScrapedProduct) {
   });
 }
 
-export function updateOverlay(result: ScoringResult, product: ScrapedProduct) {
+export function updateOverlay(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null) {
   if (shadowRoot) {
-    shadowRoot.innerHTML = getOverlayHTML(result, product);
+    shadowRoot.innerHTML = getOverlayHTML(result, product, apiBrandRating);
   } else {
-    createOverlay(result, product);
+    createOverlay(result, product, apiBrandRating);
   }
 }
 
-function getOverlayHTML(result: ScoringResult, product: ScrapedProduct): string {
+function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null): string {
   const gradeColor = GRADE_COLORS[result.grade];
   const cpwLabel = getCostPerWearLabel(result.costPerWear);
 
@@ -271,6 +272,88 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct): string 
       .rw-brand-highlight { color: #2E7D32; }
       .rw-brand-concern { color: #D32F2F; }
 
+      .rw-api-grade-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px; height: 40px;
+        border-radius: 10px;
+        font-size: 20px;
+        font-weight: 800;
+        flex-shrink: 0;
+      }
+      .rw-api-grade-A { background: #16A34A; color: #fff; }
+      .rw-api-grade-B { background: #65A30D; color: #fff; }
+      .rw-api-grade-C { background: #EAB308; color: #000; }
+      .rw-api-grade-D { background: #EA580C; color: #fff; }
+      .rw-api-grade-F { background: #DC2626; color: #fff; }
+
+      .rw-sub-score-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+      }
+      .rw-sub-score-label {
+        font-size: 12px;
+        color: #666;
+        width: 100px;
+        flex-shrink: 0;
+      }
+      .rw-sub-score-bar-bg {
+        flex: 1;
+        height: 6px;
+        background: #E0E0E0;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .rw-sub-score-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.5s ease;
+      }
+      .rw-sub-score-value {
+        font-size: 11px;
+        font-weight: 600;
+        color: #333;
+        width: 28px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .rw-cert-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 6px;
+      }
+      .rw-cert-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: #E8F5E9;
+        color: #1B5E20;
+        font-weight: 600;
+      }
+
+      .rw-brand-summary {
+        font-size: 12px;
+        color: #555;
+        line-height: 1.5;
+        margin-top: 8px;
+      }
+
+      .rw-category-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: #E3F2FD;
+        color: #1565C0;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 4px;
+      }
+
       .rw-alt-item {
         padding: 8px 12px;
         background: #F1F8E9;
@@ -388,6 +471,39 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct): string 
       </div>
       ` : ''}
 
+      ${apiBrandRating ? `
+      <div class="rw-section">
+        <div class="rw-section-title">🏢 Brand Rating</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div class="rw-api-grade-badge rw-api-grade-${escapeHtml(apiBrandRating.grade.charAt(0))}">${escapeHtml(apiBrandRating.grade)}</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#1A1A1A;">${escapeHtml(apiBrandRating.name)}</div>
+            <div style="font-size:12px;color:#666;">Score: ${apiBrandRating.overall_score}/100</div>
+          </div>
+        </div>
+        ${apiBrandRating.category ? `<span class="rw-category-badge">${escapeHtml(apiBrandRating.category)}</span>` : ''}
+        ${apiBrandRating.price_range ? `<span class="rw-category-badge" style="background:#FFF8E1;color:#F57F17;margin-left:4px;">${escapeHtml(apiBrandRating.price_range)}</span>` : ''}
+
+        <div style="margin-top:10px;">
+          ${renderSubScore('Environmental', apiBrandRating.environmental_score)}
+          ${renderSubScore('Labor', apiBrandRating.labor_score)}
+          ${renderSubScore('Transparency', apiBrandRating.transparency_score)}
+          ${renderSubScore('Animal Welfare', apiBrandRating.animal_welfare_score)}
+        </div>
+
+        ${apiBrandRating.certifications && apiBrandRating.certifications.length > 0 ? `
+        <div style="margin-top:8px;">
+          <div style="font-size:11px;color:#666;margin-bottom:4px;">Certifications</div>
+          <div class="rw-cert-list">
+            ${apiBrandRating.certifications.map((c) => `<span class="rw-cert-badge">${escapeHtml(c)}</span>`).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${apiBrandRating.summary ? `<div class="rw-brand-summary">${escapeHtml(apiBrandRating.summary)}</div>` : ''}
+      </div>
+      ` : ''}
+
       ${result.alternatives.length > 0 ? `
       <div class="rw-section">
         <div class="rw-section-title">🔄 Sustainable Alternatives</div>
@@ -440,6 +556,26 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct): string 
         Estimates based on published environmental research data.<br>
         Powered by <a href="https://rewovenapp.com" target="_blank">Rewoven</a>
       </div>
+    </div>
+  `;
+}
+
+function scoreColor(score: number): string {
+  if (score >= 70) return '#16A34A';
+  if (score >= 50) return '#65A30D';
+  if (score >= 35) return '#EAB308';
+  if (score >= 20) return '#EA580C';
+  return '#DC2626';
+}
+
+function renderSubScore(label: string, score: number): string {
+  return `
+    <div class="rw-sub-score-row">
+      <span class="rw-sub-score-label">${label}</span>
+      <div class="rw-sub-score-bar-bg">
+        <div class="rw-sub-score-bar-fill" style="width:${score}%;background:${scoreColor(score)};"></div>
+      </div>
+      <span class="rw-sub-score-value">${score}</span>
     </div>
   `;
 }

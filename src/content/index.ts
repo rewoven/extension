@@ -4,6 +4,9 @@ import { DEFAULT_SETTINGS } from '../shared/types';
 import { createOverlay, updateOverlay, removeOverlay } from './overlay';
 import { initWasmScorer, scoreMaterials, isWasmReady } from './wasm-scorer';
 import type { WasmScoringResult } from './wasm-scorer';
+import { detectBrandSlug } from '../api/brand-detector';
+import { fetchBrandRating, searchBrand } from '../api/brand-client';
+import type { BrandRating } from '../api/brand-client';
 
 let currentUrl = window.location.href;
 let scrapeTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -78,7 +81,29 @@ async function tryScrapePage() {
         console.log('[Rewoven] WASM scorer enriched result:', wasmResult.grade, wasmResult.score);
       }
     }
-    createOverlay(result, product);
+
+    // Fetch brand rating from Rewoven API (non-blocking, graceful degradation)
+    let apiBrandRating: BrandRating | null = null;
+    try {
+      const slug = detectBrandSlug(window.location.hostname, document.title);
+      if (slug) {
+        apiBrandRating = await fetchBrandRating(slug);
+        // If direct slug lookup fails, try a search by brand name
+        if (!apiBrandRating && product.brand) {
+          const results = await searchBrand(product.brand);
+          if (results.length > 0) {
+            apiBrandRating = results[0];
+          }
+        }
+        if (apiBrandRating) {
+          console.log('[Rewoven] Brand rating from API:', apiBrandRating.name, apiBrandRating.grade);
+        }
+      }
+    } catch (err) {
+      console.warn('[Rewoven] Brand rating fetch failed (graceful degradation):', err);
+    }
+
+    createOverlay(result, product, apiBrandRating);
   }
 }
 
