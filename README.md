@@ -1,6 +1,6 @@
 # lens
 
-A Chrome extension that analyzes the environmental impact and sustainability of clothing while you shop online
+A Chrome extension that analyzes the environmental impact and sustainability of clothing while you shop online using the [Rewoven API](https://github.com/rewoven/api)
 
 ## Features
 
@@ -16,9 +16,6 @@ A Chrome extension that analyzes the environmental impact and sustainability of 
 
 The extension includes a Rust-based sustainability scoring module compiled to WebAssembly. It parses fabric composition strings (e.g. "60% polyester, 40% cotton"), normalizes fiber names, and computes detailed environmental impact metrics including water usage ratings, carbon footprint ratings, biodegradability assessments, and microplastic risk levels. The WASM module runs directly in the browser for fast, consistent scoring across 25+ fiber types
 
-### Supported Retailers
-
-Zara, H&M, ASOS, Nike, SHEIN, Uniqlo, Gap, Forever 21, Urban Outfitters, Nordstrom, Boohoo, PrettyLittleThing, Fashion Nova, Mango, and any site with a generic product page scraper fallback
 
 ### Installation
 
