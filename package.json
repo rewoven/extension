@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "Rewoven Shopping Lens - Analyze the sustainability of clothing while you shop",
   "scripts": {
-    "build": "node esbuild.config.mjs",
+    "build:wasm": "cd wasm-scorer && wasm-pack build --target web --out-dir pkg",
+    "build:ext": "node esbuild.config.mjs",
+    "build": "npm run build:wasm && npm run build:ext",
     "watch": "node esbuild.config.mjs --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist wasm-scorer/pkg wasm-scorer/target"
   },
   "devDependencies": {
     "esbuild": "^0.20.0",

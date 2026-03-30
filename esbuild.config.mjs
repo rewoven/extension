@@ -13,6 +13,16 @@ copyFileSync('src/popup/popup.html', join(distDir, 'popup.html'));
 copyFileSync('src/popup/popup.css', join(distDir, 'popup.css'));
 copyFileSync('src/content/overlay.css', join(distDir, 'overlay.css'));
 
+// Copy WASM files
+const wasmPkgDir = join('wasm-scorer', 'pkg');
+if (existsSync(wasmPkgDir)) {
+  const wasmFile = join(wasmPkgDir, 'rewoven_wasm_scorer_bg.wasm');
+  if (existsSync(wasmFile)) {
+    copyFileSync(wasmFile, join(distDir, 'rewoven_wasm_scorer_bg.wasm'));
+    console.log('Copied WASM binary to dist/');
+  }
+}
+
 // Copy icons
 if (existsSync('src/assets/icons')) {
   const iconsDir = join(distDir, 'icons');

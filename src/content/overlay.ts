@@ -400,6 +400,35 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct): string 
       </div>
       ` : ''}
 
+      ${(result as any).wasmMetrics ? `
+      <div class="rw-section">
+        <div class="rw-section-title">🔬 Detailed Environmental Metrics</div>
+        <div class="rw-stat-row">
+          <span class="rw-stat-label">💧 Water Impact</span>
+          <span class="rw-stat-value">${(result as any).wasmMetrics.water_rating}</span>
+        </div>
+        <div class="rw-stat-row">
+          <span class="rw-stat-label">💨 Carbon Impact</span>
+          <span class="rw-stat-value">${(result as any).wasmMetrics.carbon_rating}</span>
+        </div>
+        <div class="rw-stat-row">
+          <span class="rw-stat-label">♻️ Biodegradability</span>
+          <span class="rw-stat-value">${(result as any).wasmMetrics.biodegradability_rating}</span>
+        </div>
+        <div class="rw-stat-row">
+          <span class="rw-stat-label">🧫 Microplastic Risk</span>
+          <span class="rw-stat-value">${(result as any).wasmMetrics.microplastic_risk}</span>
+        </div>
+      </div>
+      ` : ''}
+
+      ${(result as any).wasmRecommendations && (result as any).wasmRecommendations.length > 0 ? `
+      <div class="rw-section">
+        <div class="rw-section-title">🌱 WASM Scorer Recommendations</div>
+        ${((result as any).wasmRecommendations as string[]).map((r: string) => `<div class="rw-tip">${escapeHtml(r)}</div>`).join('')}
+      </div>
+      ` : ''}
+
       ${result.tips.length > 0 ? `
       <div class="rw-section">
         <div class="rw-section-title">💡 Tips</div>

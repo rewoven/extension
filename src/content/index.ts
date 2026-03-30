@@ -2,10 +2,17 @@ import { getScraperForSite } from '../scrapers/scraper-registry';
 import type { ScrapedProduct, ScoringResult, UserSettings, Message } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { createOverlay, updateOverlay, removeOverlay } from './overlay';
+import { initWasmScorer, scoreMaterials, isWasmReady } from './wasm-scorer';
+import type { WasmScoringResult } from './wasm-scorer';
 
 let currentUrl = window.location.href;
 let scrapeTimeout: ReturnType<typeof setTimeout> | null = null;
 let isActive = false;
+
+// Initialize the WASM scorer in the background
+initWasmScorer().catch((err) => {
+  console.warn('[Rewoven] WASM scorer unavailable, using JS fallback:', err);
+});
 
 async function getSettings(): Promise<UserSettings> {
   return new Promise((resolve) => {
@@ -59,6 +66,18 @@ async function tryScrapePage() {
 
   const result = await scoreProduct(product);
   if (result) {
+    // Enrich with WASM environmental metrics if available
+    if (isWasmReady() && product.materials.length > 0) {
+      const compositionStr = product.materials
+        .map((m) => `${m.percentage}% ${m.fiber.replace(/_/g, ' ')}`)
+        .join(', ');
+      const wasmResult = scoreMaterials(compositionStr);
+      if (wasmResult) {
+        (result as any).wasmMetrics = wasmResult.environmental_metrics;
+        (result as any).wasmRecommendations = wasmResult.recommendations;
+        console.log('[Rewoven] WASM scorer enriched result:', wasmResult.grade, wasmResult.score);
+      }
+    }
     createOverlay(result, product);
   }
 }
