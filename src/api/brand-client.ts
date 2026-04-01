@@ -72,6 +72,38 @@ export async function fetchBrandRating(brandSlug: string): Promise<BrandRating |
   }
 }
 
+export interface AlternativesResponse {
+  original: BrandRating;
+  alternatives: BrandRating[];
+  reason: string;
+}
+
+/**
+ * Fetch sustainable alternatives for a brand by slug.
+ * Returns null if the brand is not found or the API is unreachable.
+ */
+export async function fetchAlternatives(brandSlug: string, limit: number = 5): Promise<AlternativesResponse | null> {
+  const cacheKey = `alternatives:${brandSlug}:${limit}`;
+  const cached = getCached<AlternativesResponse | null>(cacheKey);
+  if (cached !== undefined) return cached;
+
+  try {
+    const response = await fetchWithTimeout(
+      `${API_BASE}/api/brands/${encodeURIComponent(brandSlug)}/alternatives?limit=${limit}`
+    );
+    if (!response.ok) {
+      setCache(cacheKey, null);
+      return null;
+    }
+    const data: AlternativesResponse = await response.json();
+    setCache(cacheKey, data);
+    return data;
+  } catch (err) {
+    console.warn('[Rewoven] Alternatives API failed:', err);
+    return null;
+  }
+}
+
 /**
  * Search for brands by name.
  * Returns an empty array if the API is unreachable or no results are found.

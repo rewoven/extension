@@ -2,6 +2,7 @@ import type { ScoringResult, ScrapedProduct } from '../shared/types';
 import { GRADE_COLORS } from '../shared/constants';
 import { getCostPerWearLabel } from '../scoring/cost-per-wear';
 import type { BrandRating } from '../api/brand-client';
+import { fetchAlternatives } from '../api/brand-client';
 
 const ROOT_ID = 'rewoven-lens-root';
 let shadowRoot: ShadowRoot | null = null;
@@ -41,6 +42,39 @@ export function createOverlay(result: ScoringResult, product: ScrapedProduct, ap
     if (panel) panel.classList.remove('expanded');
     if (badge) badge.classList.remove('hidden');
   });
+
+  // Fetch API-powered alternatives if we have a brand rating
+  if (apiBrandRating && apiBrandRating.overall_score < 70) {
+    loadApiAlternatives(apiBrandRating.slug);
+  }
+}
+
+async function loadApiAlternatives(brandSlug: string) {
+  try {
+    const data = await fetchAlternatives(brandSlug, 4);
+    if (!data || !data.alternatives || data.alternatives.length === 0 || !shadowRoot) return;
+
+    const section = shadowRoot.querySelector('#rw-api-alternatives') as HTMLElement;
+    const list = shadowRoot.querySelector('#rw-api-alt-list') as HTMLElement;
+    if (!section || !list) return;
+
+    list.innerHTML = data.alternatives.map((a) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#F0FDF4;border-radius:8px;margin-bottom:6px;border:1px solid #D1FAE5;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1A1A1A;">${escapeHtml(a.name)}</div>
+          <div style="font-size:11px;color:#666;">${escapeHtml(a.category)} · ${escapeHtml(a.price_range)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:16px;font-weight:900;color:${scoreColor(a.overall_score)};">${a.overall_score}</div>
+          <div style="font-size:10px;color:#059669;font-weight:600;">+${a.overall_score - (data.original?.overall_score || 0)} pts</div>
+        </div>
+      </div>
+    `).join('');
+
+    section.style.display = 'block';
+  } catch (err) {
+    console.warn('[Rewoven] Could not load API alternatives:', err);
+  }
 }
 
 export function updateOverlay(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null) {
@@ -515,6 +549,11 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
         `).join('')}
       </div>
       ` : ''}
+
+      <div class="rw-section" id="rw-api-alternatives" style="display:none;">
+        <div class="rw-section-title">🌿 Better Brand Alternatives</div>
+        <div id="rw-api-alt-list"></div>
+      </div>
 
       ${(result as any).wasmMetrics ? `
       <div class="rw-section">
