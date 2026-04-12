@@ -30,12 +30,9 @@ if (existsSync('src/assets/icons')) {
   cpSync('src/assets/icons', iconsDir, { recursive: true });
 }
 
-const buildOptions = {
-  entryPoints: [
-    'src/background/service-worker.ts',
-    'src/content/index.ts',
-    'src/popup/popup.ts',
-  ],
+// Service worker supports ES modules (declared in manifest.json)
+const serviceWorkerOptions = {
+  entryPoints: ['src/background/service-worker.ts'],
   bundle: true,
   outdir: distDir,
   format: 'esm',
@@ -43,14 +40,34 @@ const buildOptions = {
   sourcemap: true,
   minify: !isWatch,
   logLevel: 'info',
-  entryNames: '[dir]/[name]',
+  outbase: 'src',
+};
+
+// Content scripts & popup CANNOT use ES modules in Chrome extensions
+// They must be bundled as IIFE to avoid "import.meta outside a module" errors
+const contentOptions = {
+  entryPoints: [
+    'src/content/index.ts',
+    'src/popup/popup.ts',
+  ],
+  bundle: true,
+  outdir: distDir,
+  format: 'iife',
+  target: 'chrome120',
+  sourcemap: true,
+  minify: !isWatch,
+  logLevel: 'info',
+  outbase: 'src',
 };
 
 if (isWatch) {
-  const ctx = await esbuild.context(buildOptions);
-  await ctx.watch();
+  const ctx1 = await esbuild.context(serviceWorkerOptions);
+  const ctx2 = await esbuild.context(contentOptions);
+  await ctx1.watch();
+  await ctx2.watch();
   console.log('Watching for changes...');
 } else {
-  await esbuild.build(buildOptions);
+  await esbuild.build(serviceWorkerOptions);
+  await esbuild.build(contentOptions);
   console.log('Build complete!');
 }
