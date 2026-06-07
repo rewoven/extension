@@ -116,8 +116,10 @@ export class GenericScraper extends BaseScraper {
       }
     }
 
-    // Brute force: search all text on page for composition patterns
-    const bodyText = document.body.innerText;
+    // Brute force: search page text for composition patterns. Use textContent
+    // (not innerText, which forces a layout reflow) and cap the length so this
+    // stays fast even on very large pages.
+    const bodyText = (document.body.textContent || '').slice(0, 100000);
     const compositionMatch = bodyText.match(/(?:composition|material|fabric)[:\s]*([^.]*\d+\s*%[^.]*)/i);
     if (compositionMatch) {
       const materials = this.parseMaterialString(compositionMatch[1]);

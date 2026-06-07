@@ -34,9 +34,15 @@ export abstract class BaseScraper {
     return undefined;
   }
 
-  // Utility: detect garment category from product name/breadcrumb
+  // Utility: detect garment category from product name/breadcrumb.
+  // Uses whole-word matching so "denim wallpaper" / "canteen" / "address"
+  // don't get misclassified as clothing.
   protected detectCategory(text: string): GarmentCategory {
     const lower = text.toLowerCase();
+    const hasWord = (kw: string) => {
+      const esc = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`(?:^|[^a-z0-9])${esc}(?:[^a-z0-9]|$)`, 'i').test(lower);
+    };
 
     const categoryMap: [string[], GarmentCategory][] = [
       [['jacket', 'coat', 'parka', 'blazer', 'hoodie', 'cardigan', 'sweater', 'vest', 'puffer'], 'outerwear'],
@@ -51,7 +57,7 @@ export abstract class BaseScraper {
     ];
 
     for (const [keywords, category] of categoryMap) {
-      if (keywords.some((kw) => lower.includes(kw))) return category;
+      if (keywords.some(hasWord)) return category;
     }
 
     return 'unknown';

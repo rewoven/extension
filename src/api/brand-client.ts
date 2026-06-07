@@ -12,16 +12,20 @@ export interface BrandRating {
   labor_score: number;
   transparency_score: number;
   animal_welfare_score: number;
-  price_range: string;
-  country: string;
-  category: string;
-  certifications: string[];
-  summary: string;
-  website: string;
+  // Display-only fields — optional to reflect API variance. The overlay guards
+  // each one before rendering, so a missing field degrades gracefully.
+  price_range?: string;
+  country?: string;
+  category?: string;
+  certifications?: string[];
+  summary?: string;
+  website?: string;
 }
 
-// In-memory cache keyed by slug or search query
-const cache = new Map<string, { data: BrandRating | BrandRating[] | null; ts: number }>();
+// In-memory cache keyed by slug or search query. Values are heterogeneous
+// (single rating, list, alternatives response, or null), so we store unknown
+// and cast on read via the typed getCached<T> helper.
+const cache = new Map<string, { data: unknown; ts: number }>();
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 function getCached<T>(key: string): T | undefined {
@@ -33,7 +37,7 @@ function getCached<T>(key: string): T | undefined {
   return undefined;
 }
 
-function setCache(key: string, data: BrandRating | BrandRating[] | null): void {
+function setCache(key: string, data: unknown): void {
   cache.set(key, { data, ts: Date.now() });
 }
 

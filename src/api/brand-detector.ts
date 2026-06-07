@@ -109,9 +109,15 @@ const DOMAIN_TO_SLUG: Record<string, string> = {
 
 /**
  * Try to detect a brand slug from the current page hostname.
- * Falls back to extracting a slug from the domain name or page title.
+ *
+ * Only matches against the curated fashion-retailer map. We deliberately do
+ * NOT derive a slug from arbitrary domains or page titles \u2014 doing so produced
+ * garbage lookups (e.g. apple.com -> "apple") that hit the API for non-fashion
+ * sites. For unknown fashion sites we instead search the API by the scraped
+ * brand name (see content/index.ts), which naturally returns nothing for
+ * non-apparel brands.
  */
-export function detectBrandSlug(hostname: string, pageTitle?: string): string | null {
+export function detectBrandSlug(hostname: string): string | null {
   const host = hostname.toLowerCase().replace(/^www\./, '');
 
   // Direct domain match
@@ -121,34 +127,23 @@ export function detectBrandSlug(hostname: string, pageTitle?: string): string | 
 
   // Check if any known domain is a suffix of the hostname (handles subdomains)
   for (const [domain, slug] of Object.entries(DOMAIN_TO_SLUG)) {
-    if (host.endsWith(domain) || host.endsWith('.' + domain)) {
+    if (host === domain || host.endsWith('.' + domain)) {
       return slug;
     }
   }
 
-  // Fallback: derive a slug from the domain itself
-  // e.g. "shop.everlane.com" -> "everlane"
-  const parts = host.split('.');
-  // Pick the second-level domain (skip TLD)
-  if (parts.length >= 2) {
-    const brand = parts[parts.length - 2];
-    if (brand && brand.length > 2 && brand !== 'com' && brand !== 'co') {
-      return brand;
-    }
-  }
-
-  // Last resort: try to extract something from the page title
-  if (pageTitle) {
-    const cleaned = pageTitle
-      .split(/[|\-\u2013\u2014]/)[0]
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-    if (cleaned.length > 1 && cleaned.length < 40) {
-      return cleaned;
-    }
-  }
-
   return null;
+}
+
+/**
+ * Is this hostname a known fashion retailer? Used as a strong "this is a
+ * fashion website" signal by the apparel gate.
+ */
+export function isKnownFashionDomain(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^www\./, '');
+  if (DOMAIN_TO_SLUG[host]) return true;
+  for (const domain of Object.keys(DOMAIN_TO_SLUG)) {
+    if (host === domain || host.endsWith('.' + domain)) return true;
+  }
+  return false;
 }

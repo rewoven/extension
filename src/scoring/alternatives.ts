@@ -122,7 +122,7 @@ export function getAlternatives(
 
 export function getTips(
   materials: { fiber: FiberType; percentage: number }[],
-  score: number
+  score: number | null
 ): string[] {
   const tips: string[] = [];
 
@@ -133,11 +133,11 @@ export function getTips(
     tips.push('🔬 Wash synthetic fabrics in a microplastic-catching bag to reduce ocean pollution');
   }
 
-  if (score > 50) {
+  if (score !== null && score > 50) {
     tips.push('💡 Consider buying secondhand — apps like Depop, ThredUp, and Poshmark have similar styles');
   }
 
-  if (score < 30) {
+  if (score !== null && score < 30) {
     tips.push('✅ Great material choice! Take care of this garment to maximize its lifespan');
   }
 

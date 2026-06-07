@@ -1,4 +1,4 @@
-import type { ScrapedProduct, ScoringResult, Grade, FiberType } from '../shared/types';
+import type { ScrapedProduct, ScoringResult, Grade } from '../shared/types';
 import { GRADE_THRESHOLDS, GARMENT_WEIGHTS } from '../shared/constants';
 import { MATERIAL_DATABASE } from './material-database';
 import { getBrandRating, getBrandModifier } from './brand-ratings';
@@ -27,7 +27,7 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
   const { materials, category, price, brand } = product;
   const garmentWeight = GARMENT_WEIGHTS[category] || GARMENT_WEIGHTS.unknown;
 
-  // Calculate weighted environmental metrics
+  // Calculate weighted environmental metrics — ONLY from recognised fibres.
   let weightedCO2 = 0;
   let weightedWater = 0;
   let weightedDurability = 0;
@@ -37,6 +37,9 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
   const materialBreakdown: ScoringResult['materialBreakdown'] = [];
 
   for (const mat of materials) {
+    // 'unknown' has a placeholder DB entry — never let it produce a real
+    // footprint. Only genuinely identified fibres count.
+    if (mat.fiber === 'unknown') continue;
     const impact = MATERIAL_DATABASE[mat.fiber];
     if (!impact) continue;
 
@@ -51,7 +54,6 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
 
     totalPct += mat.percentage;
 
-    // Determine impact level for this material
     const matScore = (impact.co2PerKg / MAX_CO2) * 50 + (impact.waterPerKg / MAX_WATER) * 50;
     materialBreakdown.push({
       fiber: mat.fiber,
@@ -60,20 +62,40 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
     });
   }
 
-  // If no materials detected, use worst-case defaults
+  // NO MATERIALS FOUND → we do not invent a footprint. Return a result with
+  // everything environmental set to null. The overlay shows an honest
+  // "composition not listed" state (and may still show the real brand rating).
   if (totalPct === 0) {
-    weightedCO2 = 12;
-    weightedWater = 5000;
-    weightedDurability = 5;
-    biodegPenalty = 0.5;
-    materialBreakdown.push({ fiber: 'unknown' as FiberType, percentage: 100, impact: 'medium' });
+    return {
+      materialsKnown: false,
+      grade: null,
+      score: null,
+      co2Estimate: null,
+      waterEstimate: null,
+      costPerWear: null,
+      estimatedWears: null,
+      materialBreakdown: [],
+      brandRating: getBrandRating(brand) || undefined,
+      alternatives: getAlternatives([], category),
+      tips: getTips([], null),
+    };
+  }
+
+  // Normalise weighted metrics to the recognised portion so a partial match
+  // (e.g. only 60% identified) isn't understated.
+  if (totalPct > 0 && totalPct < 100) {
+    const scale = 100 / totalPct;
+    weightedCO2 *= scale;
+    weightedWater *= scale;
+    weightedDurability *= scale;
+    biodegPenalty *= scale;
   }
 
   // Calculate composite score (0-100, lower = better)
   const carbonScore = (weightedCO2 / MAX_CO2) * 100;
   const waterScore = (weightedWater / MAX_WATER) * 100;
   const durabilityScore = (1 - weightedDurability / 10) * 100;
-  const biodegScore = biodegPenalty * 100;
+  const biodegScore = Math.min(1, biodegPenalty) * 100;
 
   let compositeScore =
     W_CARBON * carbonScore +
@@ -92,21 +114,18 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
   const co2Estimate = Math.round(weightedCO2 * garmentWeight * 100) / 100;
   const waterEstimate = Math.round(weightedWater * garmentWeight);
 
-  // Cost per wear
   const { costPerWear, estimatedWears } = calculateCostPerWear(price, materials, category);
 
-  // Alternatives
   const alternatives = getAlternatives(materialBreakdown, category);
-
-  // Tips
   const tips = getTips(materialBreakdown, compositeScore);
 
   return {
+    materialsKnown: true,
     grade: scoreToGrade(compositeScore),
     score: Math.round(compositeScore),
     co2Estimate,
     waterEstimate,
-    costPerWear: Math.round(costPerWear * 100) / 100,
+    costPerWear: costPerWear === null ? null : Math.round(costPerWear * 100) / 100,
     estimatedWears,
     materialBreakdown,
     brandRating: getBrandRating(brand) || undefined,

@@ -1,4 +1,4 @@
-import type { ScoringResult, ScrapedProduct } from '../shared/types';
+import type { ScoringResult, ScrapedProduct, Grade } from '../shared/types';
 import { GRADE_COLORS } from '../shared/constants';
 import { getCostPerWearLabel } from '../scoring/cost-per-wear';
 import type { BrandRating } from '../api/brand-client';
@@ -58,18 +58,25 @@ async function loadApiAlternatives(brandSlug: string) {
     const list = shadowRoot.querySelector('#rw-api-alt-list') as HTMLElement;
     if (!section || !list) return;
 
-    list.innerHTML = data.alternatives.map((a) => `
+    const origScore = typeof data.original?.overall_score === 'number' ? data.original.overall_score : 0;
+    list.innerHTML = data.alternatives
+      .filter((a) => a && typeof a.overall_score === 'number')
+      .map((a) => {
+        const meta = [a.category, a.price_range].filter(Boolean).map((x) => escapeHtml(x)).join(' · ');
+        const delta = a.overall_score - origScore;
+        return `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#F0FDF4;border-radius:8px;margin-bottom:6px;border:1px solid #D1FAE5;">
         <div>
           <div style="font-size:13px;font-weight:700;color:#1A1A1A;">${escapeHtml(a.name)}</div>
-          <div style="font-size:11px;color:#666;">${escapeHtml(a.category)} · ${escapeHtml(a.price_range)}</div>
+          ${meta ? `<div style="font-size:11px;color:#666;">${meta}</div>` : ''}
         </div>
         <div style="text-align:right;">
           <div style="font-size:16px;font-weight:900;color:${scoreColor(a.overall_score)};">${a.overall_score}</div>
-          <div style="font-size:10px;color:#059669;font-weight:600;">+${a.overall_score - (data.original?.overall_score || 0)} pts</div>
+          ${delta > 0 ? `<div style="font-size:10px;color:#059669;font-weight:600;">+${delta} pts</div>` : ''}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+      })
+      .join('');
 
     section.style.display = 'block';
   } catch (err) {
@@ -85,9 +92,83 @@ export function updateOverlay(result: ScoringResult, product: ScrapedProduct, ap
   }
 }
 
+function mapApiGrade(apiGrade: string): Grade {
+  const c = (apiGrade || '').charAt(0).toUpperCase();
+  if (c === 'A') return 'A';
+  if (c === 'B') return 'B';
+  if (c === 'C') return 'C';
+  if (c === 'D') return 'D';
+  return 'F';
+}
+
 function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null): string {
-  const gradeColor = GRADE_COLORS[result.grade];
-  const cpwLabel = getCostPerWearLabel(result.costPerWear);
+  // Headline grade: prefer the item's material-based grade; otherwise fall
+  // back to the brand's real API grade. We only render when one of these exists.
+  const displayGrade: Grade =
+    result.materialsKnown && result.grade
+      ? result.grade
+      : apiBrandRating
+      ? mapApiGrade(apiBrandRating.grade)
+      : 'C';
+  const gradeColor = GRADE_COLORS[displayGrade];
+
+  // --- Grade headline ---
+  let gradeSectionHtml = '';
+  if (result.materialsKnown && result.grade && result.score !== null) {
+    gradeSectionHtml = `
+      <div class="rw-grade-section">
+        <div class="rw-grade-circle">${result.grade}</div>
+        <div class="rw-grade-info">
+          <h3>${gradeColor.label} Sustainability</h3>
+          <p>Material score: ${result.score}/100 (lower is better)</p>
+          <div class="rw-score-bar"><div class="rw-score-fill" style="width: ${100 - result.score}%"></div></div>
+        </div>
+      </div>`;
+  } else if (apiBrandRating) {
+    gradeSectionHtml = `
+      <div class="rw-grade-section">
+        <div class="rw-grade-circle">${displayGrade}</div>
+        <div class="rw-grade-info">
+          <h3>${escapeHtml(apiBrandRating.name)} — Brand Rating</h3>
+          <p>Sustainability ${apiBrandRating.overall_score}/100 (higher is better)</p>
+          <div class="rw-score-bar"><div class="rw-score-fill" style="width: ${apiBrandRating.overall_score}%"></div></div>
+        </div>
+      </div>`;
+  }
+
+  // --- Environmental footprint (only with REAL material data; never invented) ---
+  let envSectionHtml = '';
+  if (result.materialsKnown && result.co2Estimate !== null && result.waterEstimate !== null) {
+    const currencySymbol =
+      product.currency === 'USD' ? '$' : product.currency === 'GBP' ? '£' : product.currency === 'EUR' ? '€' : '';
+    const cpwRow =
+      result.costPerWear !== null
+        ? `<div class="rw-stat-row"><span class="rw-stat-label">💰 Cost Per Wear</span><span class="rw-stat-value">${currencySymbol}${result.costPerWear.toFixed(2)} — ${getCostPerWearLabel(result.costPerWear)}</span></div>`
+        : '';
+    const wearsRow =
+      result.estimatedWears !== null
+        ? `<div class="rw-stat-row"><span class="rw-stat-label">👕 Est. Wears</span><span class="rw-stat-value">~${result.estimatedWears}</span></div>`
+        : '';
+    envSectionHtml = `
+      <div class="rw-section">
+        <div class="rw-section-title">🌍 Environmental Footprint</div>
+        <div class="rw-stat-row"><span class="rw-stat-label">💨 Carbon Footprint</span><span class="rw-stat-value">~${result.co2Estimate} kg CO₂</span></div>
+        <div class="rw-stat-row"><span class="rw-stat-label">💧 Water Usage</span><span class="rw-stat-value">~${result.waterEstimate.toLocaleString()} L</span></div>
+        ${cpwRow}
+        ${wearsRow}
+      </div>`;
+  } else {
+    envSectionHtml = `
+      <div class="rw-section">
+        <div class="rw-section-title">🌍 Environmental Footprint</div>
+        <p style="font-size:12px;color:#666;line-height:1.5;">This page doesn't list a fabric composition, so we can't estimate this item's carbon or water footprint without guessing. The brand rating below uses Rewoven's published data.</p>
+      </div>`;
+  }
+
+  // Only claim "estimates from research" when we actually showed estimates.
+  const footerNote = result.materialsKnown
+    ? 'Estimates based on published environmental research data.<br>'
+    : '';
 
   return `
     <style>
@@ -426,7 +507,7 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       }
     </style>
 
-    <div class="rw-badge">${result.grade}</div>
+    <div class="rw-badge">${displayGrade}</div>
 
     <div class="rw-panel">
       <div class="rw-header">
@@ -437,36 +518,9 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
         <div class="rw-product-name">${escapeHtml(product.name)}</div>
       </div>
 
-      <div class="rw-grade-section">
-        <div class="rw-grade-circle">${result.grade}</div>
-        <div class="rw-grade-info">
-          <h3>${gradeColor.label} Sustainability</h3>
-          <p>Score: ${result.score}/100 (lower is better)</p>
-          <div class="rw-score-bar">
-            <div class="rw-score-fill" style="width: ${100 - result.score}%"></div>
-          </div>
-        </div>
-      </div>
+      ${gradeSectionHtml}
 
-      <div class="rw-section">
-        <div class="rw-section-title">🌍 Environmental Footprint</div>
-        <div class="rw-stat-row">
-          <span class="rw-stat-label">💨 Carbon Footprint</span>
-          <span class="rw-stat-value">${result.co2Estimate} kg CO₂</span>
-        </div>
-        <div class="rw-stat-row">
-          <span class="rw-stat-label">💧 Water Usage</span>
-          <span class="rw-stat-value">${result.waterEstimate.toLocaleString()} L</span>
-        </div>
-        <div class="rw-stat-row">
-          <span class="rw-stat-label">💰 Cost Per Wear</span>
-          <span class="rw-stat-value">${product.currency === 'USD' ? '$' : product.currency === 'GBP' ? '£' : product.currency === 'EUR' ? '€' : ''}${result.costPerWear.toFixed(2)} — ${cpwLabel}</span>
-        </div>
-        <div class="rw-stat-row">
-          <span class="rw-stat-label">👕 Est. Wears</span>
-          <span class="rw-stat-value">${result.estimatedWears}</span>
-        </div>
-      </div>
+      ${envSectionHtml}
 
       ${result.materialBreakdown.length > 0 ? `
       <div class="rw-section">
@@ -483,7 +537,7 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       </div>
       ` : ''}
 
-      ${result.brandRating ? `
+      ${(result.brandRating && !apiBrandRating) ? `
       <div class="rw-section">
         <div class="rw-section-title">🏷️ Brand Rating</div>
         <div class="rw-brand-row">
@@ -509,7 +563,7 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       <div class="rw-section">
         <div class="rw-section-title">🏢 Brand Rating</div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-          <div class="rw-api-grade-badge rw-api-grade-${escapeHtml(apiBrandRating.grade.charAt(0))}">${escapeHtml(apiBrandRating.grade)}</div>
+          <div class="rw-api-grade-badge rw-api-grade-${mapApiGrade(apiBrandRating.grade)}">${escapeHtml(apiBrandRating.grade)}</div>
           <div>
             <div style="font-size:15px;font-weight:700;color:#1A1A1A;">${escapeHtml(apiBrandRating.name)}</div>
             <div style="font-size:12px;color:#666;">Score: ${apiBrandRating.overall_score}/100</div>
@@ -555,35 +609,6 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
         <div id="rw-api-alt-list"></div>
       </div>
 
-      ${(result as any).wasmMetrics ? `
-      <div class="rw-section">
-        <div class="rw-section-title">🔬 Detailed Environmental Metrics</div>
-        <div class="rw-stat-row">
-          <span class="rw-stat-label">💧 Water Impact</span>
-          <span class="rw-stat-value">${(result as any).wasmMetrics.water_rating}</span>
-        </div>
-        <div class="rw-stat-row">
-          <span class="rw-stat-label">💨 Carbon Impact</span>
-          <span class="rw-stat-value">${(result as any).wasmMetrics.carbon_rating}</span>
-        </div>
-        <div class="rw-stat-row">
-          <span class="rw-stat-label">♻️ Biodegradability</span>
-          <span class="rw-stat-value">${(result as any).wasmMetrics.biodegradability_rating}</span>
-        </div>
-        <div class="rw-stat-row">
-          <span class="rw-stat-label">🧫 Microplastic Risk</span>
-          <span class="rw-stat-value">${(result as any).wasmMetrics.microplastic_risk}</span>
-        </div>
-      </div>
-      ` : ''}
-
-      ${(result as any).wasmRecommendations && (result as any).wasmRecommendations.length > 0 ? `
-      <div class="rw-section">
-        <div class="rw-section-title">🌱 WASM Scorer Recommendations</div>
-        ${((result as any).wasmRecommendations as string[]).map((r: string) => `<div class="rw-tip">${escapeHtml(r)}</div>`).join('')}
-      </div>
-      ` : ''}
-
       ${result.tips.length > 0 ? `
       <div class="rw-section">
         <div class="rw-section-title">💡 Tips</div>
@@ -592,22 +617,24 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       ` : ''}
 
       <div class="rw-footer">
-        Estimates based on published environmental research data.<br>
-        Powered by <a href="https://rewovenapp.com" target="_blank">Rewoven</a>
+        ${footerNote}Powered by <a href="https://rewovenapp.com" target="_blank">Rewoven</a>
       </div>
     </div>
   `;
 }
 
-function scoreColor(score: number): string {
-  if (score >= 70) return '#16A34A';
-  if (score >= 50) return '#65A30D';
-  if (score >= 35) return '#EAB308';
-  if (score >= 20) return '#EA580C';
+function scoreColor(score: number | null | undefined): string {
+  const s = typeof score === 'number' && Number.isFinite(score) ? score : 0;
+  if (s >= 70) return '#16A34A';
+  if (s >= 50) return '#65A30D';
+  if (s >= 35) return '#EAB308';
+  if (s >= 20) return '#EA580C';
   return '#DC2626';
 }
 
-function renderSubScore(label: string, score: number): string {
+function renderSubScore(label: string, score: number | null | undefined): string {
+  // Skip dimensions the API didn't return — never render "width:undefined%".
+  if (typeof score !== 'number' || !Number.isFinite(score)) return '';
   return `
     <div class="rw-sub-score-row">
       <span class="rw-sub-score-label">${label}</span>
@@ -619,9 +646,11 @@ function renderSubScore(label: string, score: number): string {
   `;
 }
 
-function escapeHtml(str: string): string {
+// Tolerates undefined/null/number — coerces safely and never throws or prints
+// the literal string "undefined".
+function escapeHtml(str: unknown): string {
   const div = document.createElement('div');
-  div.textContent = str;
+  div.textContent = str == null ? '' : String(str);
   return div.innerHTML;
 }
 

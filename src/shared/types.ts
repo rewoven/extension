@@ -70,12 +70,16 @@ export interface MaterialImpact {
 }
 
 export interface ScoringResult {
-  grade: Grade;
-  score: number;          // 0-100 (lower = better)
-  co2Estimate: number;    // kg CO2 for this garment
-  waterEstimate: number;  // liters for this garment
-  costPerWear: number;
-  estimatedWears: number;
+  // Whether we actually found a textile composition on the page. When false,
+  // all the environmental estimates below are null — we never fabricate them.
+  materialsKnown: boolean;
+  // Material-derived sustainability grade/score. Null when materials unknown.
+  grade: Grade | null;
+  score: number | null;          // 0-100 (lower = better)
+  co2Estimate: number | null;    // kg CO2 for this garment
+  waterEstimate: number | null;  // liters for this garment
+  costPerWear: number | null;    // null when price is unknown
+  estimatedWears: number | null; // null when category/materials unknown
   materialBreakdown: {
     fiber: FiberType;
     percentage: number;
