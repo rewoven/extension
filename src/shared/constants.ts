@@ -1,5 +1,9 @@
 import type { Grade } from './types';
 
+// Public page explaining how scores/footprints are calculated and the data
+// sources behind the per-fibre coefficients.
+export const METHODOLOGY_URL = 'https://rewovenapp.com/methodology/';
+
 export const SUPPORTED_RETAILERS = [
   { name: 'Zara', patterns: ['zara.com'] },
   { name: 'H&M', patterns: ['hm.com', 'www2.hm.com'] },

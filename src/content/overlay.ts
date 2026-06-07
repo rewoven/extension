@@ -1,5 +1,5 @@
 import type { ScoringResult, ScrapedProduct, Grade } from '../shared/types';
-import { GRADE_COLORS } from '../shared/constants';
+import { GRADE_COLORS, METHODOLOGY_URL } from '../shared/constants';
 import { getCostPerWearLabel } from '../scoring/cost-per-wear';
 import type { BrandRating } from '../api/brand-client';
 import { fetchAlternatives } from '../api/brand-client';
@@ -617,7 +617,7 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       ` : ''}
 
       <div class="rw-footer">
-        ${footerNote}Powered by <a href="https://rewovenapp.com" target="_blank">Rewoven</a>
+        ${footerNote}<a href="${METHODOLOGY_URL}" target="_blank" rel="noopener">How is this calculated?</a> · Powered by <a href="https://rewovenapp.com" target="_blank" rel="noopener">Rewoven</a>
       </div>
     </div>
   `;

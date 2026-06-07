@@ -1,7 +1,37 @@
 import type { FiberType, MaterialImpact } from '../shared/types';
 
+/**
+ * Per-fibre cradle-to-gate environmental coefficients.
+ *
+ * ⚠️ These are ROUNDED INDUSTRY AVERAGES, not measurements of any specific
+ * garment. Real impact varies widely by region, farm, mill, energy mix, and
+ * dyeing/finishing. The resulting footprint figures are relative,
+ * order-of-magnitude guidance — not precise per-product values.
+ *
+ * Units:
+ *   co2PerKg    — kg CO₂-equivalent per kg of fibre (cradle-to-gate)
+ *   waterPerKg  — litres of water per kg of fibre
+ *   durability  — 1–10 relative score (used only for cost-per-wear/longevity)
+ *
+ * Figures are compiled from, and kept consistent with, these public sources.
+ * Where sources disagree we use a representative mid-range value:
+ *   • Ellen MacArthur Foundation, "A New Textiles Economy" (2017)
+ *     https://ellenmacarthurfoundation.org/a-new-textiles-economy
+ *   • Water Footprint Network — Mekonnen & Hoekstra (cotton ≈ 10,000 L/kg)
+ *     https://www.waterfootprint.org
+ *   • Textile Exchange — Preferred Fiber & Materials Market Report
+ *     https://textileexchange.org
+ *   • Higg Materials Sustainability Index (Higg MSI / Cascale)
+ *     https://cascale.org
+ *   • Quantis — "Measuring Fashion" impact study (2018)
+ *     https://quantis.com
+ *
+ * Full public methodology: https://rewovenapp.com/methodology/
+ */
 export const MATERIAL_DATABASE: Record<FiberType, MaterialImpact> = {
   cotton: {
+    // Water ≈ 10,000 L/kg is the Water Footprint Network global average for
+    // cotton lint (Mekonnen & Hoekstra). CO₂ per published cotton LCA ranges.
     co2PerKg: 16.4,
     waterPerKg: 10000,
     durability: 6,
@@ -26,6 +56,8 @@ export const MATERIAL_DATABASE: Record<FiberType, MaterialImpact> = {
     microplasticRisk: false,
   },
   polyester: {
+    // Petroleum-based: low process water but energy-intensive, and a primary
+    // source of laundry microplastics (Ellen MacArthur Foundation; Higg MSI).
     co2PerKg: 14.2,
     waterPerKg: 60,
     durability: 8,
@@ -114,6 +146,8 @@ export const MATERIAL_DATABASE: Record<FiberType, MaterialImpact> = {
     microplasticRisk: false,
   },
   wool: {
+    // High CO₂ from enteric methane (sheep); high water for grazing/processing
+    // (Higg MSI consistently ranks animal fibres among the highest-impact).
     co2PerKg: 20.0,
     waterPerKg: 15000,
     durability: 9,
@@ -154,6 +188,8 @@ export const MATERIAL_DATABASE: Record<FiberType, MaterialImpact> = {
     microplasticRisk: true,
   },
   cashmere: {
+    // Highest-impact fibre in this set (goat herding/overgrazing); used as the
+    // upper bound for normalisation. Directionally consistent with Higg MSI.
     co2PerKg: 28.0,
     waterPerKg: 20000,
     durability: 6,
@@ -193,6 +229,9 @@ export const MATERIAL_DATABASE: Record<FiberType, MaterialImpact> = {
     renewable: true,
     microplasticRisk: false,
   },
+  // NOTE: 'unknown' is a placeholder and is deliberately NEVER used to compute
+  // a real footprint — the scoring engine and apparel gate exclude it, so an
+  // unidentified fibre shows "composition not listed" rather than these values.
   unknown: {
     co2PerKg: 12.0,
     waterPerKg: 5000,
