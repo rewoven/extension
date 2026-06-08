@@ -48,7 +48,7 @@ try {
     }
   });
 } catch {
-  /* storage events unavailable — non-fatal */
+  /* storage events unavailable - non-fatal */
 }
 
 async function tryScrapePage() {
@@ -73,7 +73,7 @@ async function tryScrapePage() {
 
   const product = scraper.extract();
   if (!product || !product.name) {
-    // Maybe the page hasn't finished loading — retry once. Track the timer in
+    // Maybe the page hasn't finished loading - retry once. Track the timer in
     // scrapeTimeout so a navigation cancels it (no stray fire on the next page).
     if (!isActive) {
       isActive = true;
@@ -83,10 +83,10 @@ async function tryScrapePage() {
     return;
   }
 
-  // APPAREL GATE — only run on clothing/fashion products. This is what keeps
+  // APPAREL GATE - only run on clothing/fashion products. This is what keeps
   // the Lens off non-fashion pages like apple.com.
   if (!isApparelContext(product, hostname)) {
-    console.log('[Rewoven] Not a clothing product — skipping:', product.name);
+    console.log('[Rewoven] Not a clothing product - skipping:', product.name);
     removeOverlay();
     return;
   }
@@ -105,7 +105,7 @@ async function tryScrapePage() {
   console.log('[Rewoven] Materials:', product.materials);
 
   // Fetch the real brand rating from the Rewoven API (graceful degradation).
-  // Only the curated fashion-domain map or an API name search can match — so
+  // Only the curated fashion-domain map or an API name search can match - so
   // non-fashion brands simply return nothing.
   let apiBrandRating: BrandRating | null = null;
   try {
@@ -124,15 +124,15 @@ async function tryScrapePage() {
     console.warn('[Rewoven] Brand rating fetch failed (graceful degradation):', err);
   }
 
-  // Score locally — the engine is pure/synchronous, so there's no need to
+  // Score locally - the engine is pure/synchronous, so there's no need to
   // round-trip to the service worker (which can be asleep in MV3).
   const result = scoreProduct(product);
 
-  // NOTHING-REAL GATE — only show the overlay if we actually have real data:
+  // NOTHING-REAL GATE - only show the overlay if we actually have real data:
   // a detected material composition OR a real brand rating from the API.
   // Prevents an empty/invented card.
   if (!result.materialsKnown && !apiBrandRating) {
-    console.log('[Rewoven] No material composition or brand rating — skipping.');
+    console.log('[Rewoven] No material composition or brand rating - skipping.');
     removeOverlay();
     return;
   }
@@ -157,19 +157,19 @@ setTimeout(tryScrapePage, 1200);
 // ─── SPA navigation detection ────────────────────────────────────────
 // Content scripts run in an isolated world, so we can't reliably intercept the
 // page's own history.pushState. Instead we react to the signals we CAN observe
-// — and onUrlChange() is a no-op when the URL is unchanged, so all of this is
+// - and onUrlChange() is a no-op when the URL is unchanged, so all of this is
 // effectively free (no scraping happens until the URL actually changes).
 const fireNav = () => onUrlChange();
 window.addEventListener('popstate', fireNav);
 window.addEventListener('hashchange', fireNav);
 
-// Most SPA route changes update the document title — observe it (cheap).
+// Most SPA route changes update the document title - observe it (cheap).
 const titleEl = document.querySelector('title');
 if (titleEl) {
   new MutationObserver(fireNav).observe(titleEl, { childList: true, characterData: true, subtree: true });
 }
 
 // Catch-all for SPA routes that change nothing observable above. This only does
-// a string comparison of location.href every 2s — negligible cost, and it never
+// a string comparison of location.href every 2s - negligible cost, and it never
 // triggers work unless the URL genuinely changed.
 setInterval(fireNav, 2000);

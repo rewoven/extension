@@ -2,7 +2,7 @@ import type { Message, UserSettings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
 
 // Handle messages from the popup. (Product scoring now runs directly in the
-// content script — no message round-trip / service-worker wake-up needed.)
+// content script - no message round-trip / service-worker wake-up needed.)
 chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
   switch (message.type) {
     case 'GET_SETTINGS': {

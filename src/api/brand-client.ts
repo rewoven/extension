@@ -12,7 +12,7 @@ export interface BrandRating {
   labor_score: number;
   transparency_score: number;
   animal_welfare_score: number;
-  // Display-only fields — optional to reflect API variance. The overlay guards
+  // Display-only fields - optional to reflect API variance. The overlay guards
   // each one before rendering, so a missing field degrades gracefully.
   price_range?: string;
   country?: string;

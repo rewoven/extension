@@ -129,7 +129,7 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       <div class="rw-grade-section">
         <div class="rw-grade-circle">${displayGrade}</div>
         <div class="rw-grade-info">
-          <h3>${escapeHtml(apiBrandRating.name)} — Brand Rating</h3>
+          <h3>${escapeHtml(apiBrandRating.name)} - Brand Rating</h3>
           <p>Sustainability ${apiBrandRating.overall_score}/100 (higher is better)</p>
           <div class="rw-score-bar"><div class="rw-score-fill" style="width: ${apiBrandRating.overall_score}%"></div></div>
         </div>
@@ -143,7 +143,7 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       product.currency === 'USD' ? '$' : product.currency === 'GBP' ? '£' : product.currency === 'EUR' ? '€' : '';
     const cpwRow =
       result.costPerWear !== null
-        ? `<div class="rw-stat-row"><span class="rw-stat-label">💰 Cost Per Wear</span><span class="rw-stat-value">${currencySymbol}${result.costPerWear.toFixed(2)} — ${getCostPerWearLabel(result.costPerWear)}</span></div>`
+        ? `<div class="rw-stat-row"><span class="rw-stat-label">💰 Cost Per Wear</span><span class="rw-stat-value">${currencySymbol}${result.costPerWear.toFixed(2)} - ${getCostPerWearLabel(result.costPerWear)}</span></div>`
         : '';
     const wearsRow =
       result.estimatedWears !== null
@@ -633,7 +633,7 @@ function scoreColor(score: number | null | undefined): string {
 }
 
 function renderSubScore(label: string, score: number | null | undefined): string {
-  // Skip dimensions the API didn't return — never render "width:undefined%".
+  // Skip dimensions the API didn't return - never render "width:undefined%".
   if (typeof score !== 'number' || !Number.isFinite(score)) return '';
   return `
     <div class="rw-sub-score-row">
@@ -646,7 +646,7 @@ function renderSubScore(label: string, score: number | null | undefined): string
   `;
 }
 
-// Tolerates undefined/null/number — coerces safely and never throws or prints
+// Tolerates undefined/null/number - coerces safely and never throws or prints
 // the literal string "undefined".
 function escapeHtml(str: unknown): string {
   const div = document.createElement('div');

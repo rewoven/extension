@@ -31,7 +31,7 @@ export function calculateCostPerWear(
   const durabilityFactor = 0.5 + weightedDurability / 10;
   const estimatedWears = Math.round(baseWears * durabilityFactor);
 
-  // Cost per wear needs a real price — never show $0.00 for an unknown price.
+  // Cost per wear needs a real price - never show $0.00 for an unknown price.
   const costPerWear = price > 0 ? price / estimatedWears : null;
 
   return { costPerWear, estimatedWears };

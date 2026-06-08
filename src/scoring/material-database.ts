@@ -6,24 +6,24 @@ import type { FiberType, MaterialImpact } from '../shared/types';
  * ⚠️ These are ROUNDED INDUSTRY AVERAGES, not measurements of any specific
  * garment. Real impact varies widely by region, farm, mill, energy mix, and
  * dyeing/finishing. The resulting footprint figures are relative,
- * order-of-magnitude guidance — not precise per-product values.
+ * order-of-magnitude guidance - not precise per-product values.
  *
  * Units:
- *   co2PerKg    — kg CO₂-equivalent per kg of fibre (cradle-to-gate)
- *   waterPerKg  — litres of water per kg of fibre
- *   durability  — 1–10 relative score (used only for cost-per-wear/longevity)
+ *   co2PerKg    - kg CO₂-equivalent per kg of fibre (cradle-to-gate)
+ *   waterPerKg  - litres of water per kg of fibre
+ *   durability  - 1-10 relative score (used only for cost-per-wear/longevity)
  *
  * Figures are compiled from, and kept consistent with, these public sources.
  * Where sources disagree we use a representative mid-range value:
  *   • Ellen MacArthur Foundation, "A New Textiles Economy" (2017)
  *     https://ellenmacarthurfoundation.org/a-new-textiles-economy
- *   • Water Footprint Network — Mekonnen & Hoekstra (cotton ≈ 10,000 L/kg)
+ *   • Water Footprint Network - Mekonnen & Hoekstra (cotton ≈ 10,000 L/kg)
  *     https://www.waterfootprint.org
- *   • Textile Exchange — Preferred Fiber & Materials Market Report
+ *   • Textile Exchange - Preferred Fiber & Materials Market Report
  *     https://textileexchange.org
  *   • Higg Materials Sustainability Index (Higg MSI / Cascale)
  *     https://cascale.org
- *   • Quantis — "Measuring Fashion" impact study (2018)
+ *   • Quantis - "Measuring Fashion" impact study (2018)
  *     https://quantis.com
  *
  * Full public methodology: https://rewovenapp.com/methodology/
@@ -230,7 +230,7 @@ export const MATERIAL_DATABASE: Record<FiberType, MaterialImpact> = {
     microplasticRisk: false,
   },
   // NOTE: 'unknown' is a placeholder and is deliberately NEVER used to compute
-  // a real footprint — the scoring engine and apparel gate exclude it, so an
+  // a real footprint - the scoring engine and apparel gate exclude it, so an
   // unidentified fibre shows "composition not listed" rather than these values.
   unknown: {
     co2PerKg: 12.0,

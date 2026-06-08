@@ -27,7 +27,7 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
   const { materials, category, price, brand } = product;
   const garmentWeight = GARMENT_WEIGHTS[category] || GARMENT_WEIGHTS.unknown;
 
-  // Calculate weighted environmental metrics — ONLY from recognised fibres.
+  // Calculate weighted environmental metrics - ONLY from recognised fibres.
   let weightedCO2 = 0;
   let weightedWater = 0;
   let weightedDurability = 0;
@@ -37,7 +37,7 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
   const materialBreakdown: ScoringResult['materialBreakdown'] = [];
 
   for (const mat of materials) {
-    // 'unknown' has a placeholder DB entry — never let it produce a real
+    // 'unknown' has a placeholder DB entry - never let it produce a real
     // footprint. Only genuinely identified fibres count.
     if (mat.fiber === 'unknown') continue;
     const impact = MATERIAL_DATABASE[mat.fiber];

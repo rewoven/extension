@@ -1,9 +1,9 @@
 /**
- * Apparel gate — decides whether the current page is actually a clothing /
+ * Apparel gate - decides whether the current page is actually a clothing /
  * fashion product before the Shopping Lens shows anything.
  *
  * This is what stops the overlay from appearing on non-fashion pages such as
- * apple.com, and — crucially — on the non-clothing aisles of general
+ * apple.com, and - crucially - on the non-clothing aisles of general
  * marketplaces like Amazon/Walmart (electronics, books, groceries, furniture).
  * We require a positive apparel signal; ambiguous or non-apparel pages are
  * skipped. Precision is favoured over recall by design.
@@ -13,19 +13,19 @@ import type { ScrapedProduct } from '../shared/types';
 import { isKnownFashionDomain } from '../api/brand-detector';
 
 // Garment categories that, on their own, are strong evidence of clothing.
-// 'accessory' is intentionally excluded — "watch"/"bag" match electronics and
+// 'accessory' is intentionally excluded - "watch"/"bag" match electronics and
 // other goods (e.g. Apple Watch) and are too weak alone.
 const CLOTHING_CATEGORIES = new Set([
   'top', 'bottom', 'dress', 'outerwear', 'activewear', 'footwear', 'underwear', 'swimwear',
 ]);
 
 // General marketplaces sell every category, so being on one is NOT evidence of
-// clothing — we require an explicit apparel signal there.
+// clothing - we require an explicit apparel signal there.
 const GENERAL_MARKETPLACES = [
   'amazon.', 'walmart.com', 'target.com', 'ebay.', 'etsy.com', 'aliexpress.', 'wish.com',
 ];
 
-// Specific apparel terms (generic words like "fashion"/"cloth" are excluded —
+// Specific apparel terms (generic words like "fashion"/"cloth" are excluded -
 // they collide with "fashion seating", "tablecloth", etc.). Matched as whole
 // words only.
 const APPAREL_KEYWORDS = [

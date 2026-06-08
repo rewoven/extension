@@ -33,7 +33,7 @@ const ALTERNATIVE_RULES: AlternativeRule[] = [
   },
   {
     badFibers: ['acrylic'],
-    suggestion: 'Acrylic sheds microplastics — consider wool, cotton, or Tencel',
+    suggestion: 'Acrylic sheds microplastics - consider wool, cotton, or Tencel',
     brands: [
       { name: 'Eileen Fisher', reason: 'Organic and sustainable knitwear', url: 'https://www.eileenfisher.com' },
       { name: 'Reformation', reason: 'Sustainable fabric choices', url: 'https://www.thereformation.com' },
@@ -134,14 +134,14 @@ export function getTips(
   }
 
   if (score !== null && score > 50) {
-    tips.push('💡 Consider buying secondhand — apps like Depop, ThredUp, and Poshmark have similar styles');
+    tips.push('💡 Consider buying secondhand - apps like Depop, ThredUp, and Poshmark have similar styles');
   }
 
   if (score !== null && score < 30) {
     tips.push('✅ Great material choice! Take care of this garment to maximize its lifespan');
   }
 
-  tips.push('♻️ When done, donate or recycle — most textiles can have a second life');
+  tips.push('♻️ When done, donate or recycle - most textiles can have a second life');
 
   return tips.slice(0, 3);
 }

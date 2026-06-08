@@ -71,7 +71,7 @@ export interface MaterialImpact {
 
 export interface ScoringResult {
   // Whether we actually found a textile composition on the page. When false,
-  // all the environmental estimates below are null — we never fabricate them.
+  // all the environmental estimates below are null - we never fabricate them.
   materialsKnown: boolean;
   // Material-derived sustainability grade/score. Null when materials unknown.
   grade: Grade | null;

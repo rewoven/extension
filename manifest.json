@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Rewoven Shopping Lens",
   "version": "2.0.0",
-  "description": "See the sustainability of clothing while you shop. Activates only on fashion product pages — and only shows real, sourced data, never estimates it can't back up.",
+  "description": "See the sustainability of clothing while you shop. Activates only on fashion product pages - and only shows real, sourced data, never estimates it can't back up.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
