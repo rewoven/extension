@@ -7,20 +7,17 @@ const isWatch = process.argv.includes('--watch');
 const distDir = 'dist';
 if (!existsSync(distDir)) mkdirSync(distDir, { recursive: true });
 
-// Copy static files
 copyFileSync('manifest.json', join(distDir, 'manifest.json'));
 copyFileSync('src/popup/popup.html', join(distDir, 'popup.html'));
 copyFileSync('src/popup/popup.css', join(distDir, 'popup.css'));
 copyFileSync('src/content/overlay.css', join(distDir, 'overlay.css'));
 
-// Copy icons
 if (existsSync('src/assets/icons')) {
   const iconsDir = join(distDir, 'icons');
   if (!existsSync(iconsDir)) mkdirSync(iconsDir, { recursive: true });
   cpSync('src/assets/icons', iconsDir, { recursive: true });
 }
 
-// Service worker supports ES modules (declared in manifest.json)
 const serviceWorkerOptions = {
   entryPoints: ['src/background/service-worker.ts'],
   bundle: true,
@@ -33,8 +30,6 @@ const serviceWorkerOptions = {
   outbase: 'src',
 };
 
-// Content scripts & popup CANNOT use ES modules in Chrome extensions
-// They must be bundled as IIFE to avoid "import.meta outside a module" errors
 const contentOptions = {
   entryPoints: [
     'src/content/index.ts',

@@ -1,8 +1,6 @@
 import type { Message, UserSettings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
 
-// Handle messages from the popup. (Product scoring now runs directly in the
-// content script - no message round-trip / service-worker wake-up needed.)
 chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
   switch (message.type) {
     case 'GET_SETTINGS': {
@@ -10,7 +8,7 @@ chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) =
         const settings: UserSettings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
         sendResponse({ type: 'SETTINGS_RESULT', payload: settings } as Message);
       });
-      return true; // keep channel open for async response
+      return true;
     }
 
     case 'UPDATE_SETTINGS': {
@@ -26,7 +24,6 @@ chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) =
   }
 });
 
-// Set default settings on install
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get('settings', (data) => {
     if (!data.settings) {

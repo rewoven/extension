@@ -1,4 +1,4 @@
-// ============ PRODUCT DATA ============
+
 
 export type FiberType =
   | 'cotton'
@@ -44,7 +44,7 @@ export type Grade = 'A' | 'B' | 'C' | 'D' | 'F';
 export interface MaterialComposition {
   fiber: FiberType;
   percentage: number;
-  qualifier?: string; // "recycled", "organic", "BCI"
+  qualifier?: string;
 }
 
 export interface ScrapedProduct {
@@ -58,28 +58,25 @@ export interface ScrapedProduct {
   url: string;
 }
 
-// ============ SCORING ============
-
 export interface MaterialImpact {
-  co2PerKg: number;      // kg CO2 per kg of fiber
-  waterPerKg: number;    // liters of water per kg of fiber
-  durability: number;    // 1-10 scale
+  co2PerKg: number;
+  waterPerKg: number;
+  durability: number;
   biodegradable: boolean;
   renewable: boolean;
   microplasticRisk: boolean;
 }
 
 export interface ScoringResult {
-  // Whether we actually found a textile composition on the page. When false,
-  // all the environmental estimates below are null - we never fabricate them.
+
   materialsKnown: boolean;
-  // Material-derived sustainability grade/score. Null when materials unknown.
+
   grade: Grade | null;
-  score: number | null;          // 0-100 (lower = better)
-  co2Estimate: number | null;    // kg CO2 for this garment
-  waterEstimate: number | null;  // liters for this garment
-  costPerWear: number | null;    // null when price is unknown
-  estimatedWears: number | null; // null when category/materials unknown
+  score: number | null;
+  co2Estimate: number | null;
+  waterEstimate: number | null;
+  costPerWear: number | null;
+  estimatedWears: number | null;
   materialBreakdown: {
     fiber: FiberType;
     percentage: number;
@@ -92,7 +89,7 @@ export interface ScoringResult {
 
 export interface BrandInfo {
   name: string;
-  rating: number;        // 1-5
+  rating: number;
   highlights: string[];
   concerns: string[];
 }
@@ -102,8 +99,6 @@ export interface Alternative {
   reason: string;
   url?: string;
 }
-
-// ============ MESSAGING ============
 
 export type Message =
   | { type: 'SCORE_PRODUCT'; payload: ScrapedProduct }

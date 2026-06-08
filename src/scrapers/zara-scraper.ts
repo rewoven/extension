@@ -8,12 +8,12 @@ export class ZaraScraper extends BaseScraper {
     return !!(
       document.querySelector('.product-detail-view') ||
       document.querySelector('[class*="product-detail"]') ||
-      window.location.pathname.includes('-p') // Zara product URLs end with -pXXXXX.html
+      window.location.pathname.includes('-p')
     );
   }
 
   extract(): ScrapedProduct | null {
-    // Try JSON-LD first
+
     const jsonLd = this.getJsonLd();
 
     const name =
@@ -24,7 +24,6 @@ export class ZaraScraper extends BaseScraper {
 
     if (!name) return null;
 
-    // Price
     let price = 0;
     let currency = 'USD';
 
@@ -43,10 +42,8 @@ export class ZaraScraper extends BaseScraper {
       }
     }
 
-    // Materials - Zara shows in accordion under "MATERIALS" or "COMPOSITION"
     const materials = this.extractMaterials();
 
-    // Brand image
     const imageUrl =
       jsonLd?.image?.[0] ||
       document.querySelector('.media-image__image, .product-detail-image img')?.getAttribute('src') ||
@@ -65,7 +62,7 @@ export class ZaraScraper extends BaseScraper {
   }
 
   private extractMaterials() {
-    // Zara puts material info in structured product detail sections
+
     const selectors = [
       '.product-detail-extra-detail .structured-component-text',
       '[class*="product-detail-composition"]',
@@ -83,7 +80,6 @@ export class ZaraScraper extends BaseScraper {
       }
     }
 
-    // Fallback: search all product detail text
     const detailSections = document.querySelectorAll(
       '.product-detail-extra-detail, [class*="product-detail-description"]'
     );

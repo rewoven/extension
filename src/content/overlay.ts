@@ -26,7 +26,6 @@ export function createOverlay(result: ScoringResult, product: ScrapedProduct, ap
   shadowRoot = host.attachShadow({ mode: 'open' });
   shadowRoot.innerHTML = getOverlayHTML(result, product, apiBrandRating);
 
-  // Add event listeners
   const badge = shadowRoot.querySelector('.rw-badge') as HTMLElement;
   const panel = shadowRoot.querySelector('.rw-panel') as HTMLElement;
   const closeBtn = shadowRoot.querySelector('.rw-close') as HTMLElement;
@@ -43,7 +42,6 @@ export function createOverlay(result: ScoringResult, product: ScrapedProduct, ap
     if (badge) badge.classList.remove('hidden');
   });
 
-  // Fetch API-powered alternatives if we have a brand rating
   if (apiBrandRating && apiBrandRating.overall_score < 70) {
     loadApiAlternatives(apiBrandRating.slug);
   }
@@ -102,8 +100,7 @@ function mapApiGrade(apiGrade: string): Grade {
 }
 
 function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null): string {
-  // Headline grade: prefer the item's material-based grade; otherwise fall
-  // back to the brand's real API grade. We only render when one of these exists.
+
   const displayGrade: Grade =
     result.materialsKnown && result.grade
       ? result.grade
@@ -112,7 +109,6 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       : 'C';
   const gradeColor = GRADE_COLORS[displayGrade];
 
-  // --- Grade headline ---
   let gradeSectionHtml = '';
   if (result.materialsKnown && result.grade && result.score !== null) {
     gradeSectionHtml = `
@@ -136,7 +132,6 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       </div>`;
   }
 
-  // --- Environmental footprint (only with REAL material data; never invented) ---
   let envSectionHtml = '';
   if (result.materialsKnown && result.co2Estimate !== null && result.waterEstimate !== null) {
     const currencySymbol =
@@ -165,7 +160,6 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       </div>`;
   }
 
-  // Only claim "estimates from research" when we actually showed estimates.
   const footerNote = result.materialsKnown
     ? 'Estimates based on published environmental research data.<br>'
     : '';
@@ -633,7 +627,7 @@ function scoreColor(score: number | null | undefined): string {
 }
 
 function renderSubScore(label: string, score: number | null | undefined): string {
-  // Skip dimensions the API didn't return - never render "width:undefined%".
+
   if (typeof score !== 'number' || !Number.isFinite(score)) return '';
   return `
     <div class="rw-sub-score-row">
@@ -646,8 +640,6 @@ function renderSubScore(label: string, score: number | null | undefined): string
   `;
 }
 
-// Tolerates undefined/null/number - coerces safely and never throws or prints
-// the literal string "undefined".
 function escapeHtml(str: unknown): string {
   const div = document.createElement('div');
   div.textContent = str == null ? '' : String(str);

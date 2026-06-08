@@ -57,7 +57,6 @@ const ALTERNATIVE_RULES: AlternativeRule[] = [
   },
 ];
 
-// General sustainable brands by category
 const CATEGORY_ALTERNATIVES: Partial<Record<GarmentCategory, Alternative[]>> = {
   top: [
     { brandName: 'Everlane', reason: 'Transparent pricing, quality basics' },
@@ -88,7 +87,6 @@ export function getAlternatives(
   const alternatives: Alternative[] = [];
   const seen = new Set<string>();
 
-  // Check material-specific rules
   for (const rule of ALTERNATIVE_RULES) {
     const hasBadFiber = materials.some(
       (m) => rule.badFibers.includes(m.fiber) && m.percentage >= 20
@@ -107,7 +105,6 @@ export function getAlternatives(
     }
   }
 
-  // Add category-specific alternatives if we don't have enough
   if (alternatives.length < 3 && CATEGORY_ALTERNATIVES[category]) {
     for (const alt of CATEGORY_ALTERNATIVES[category]!) {
       if (!seen.has(alt.brandName) && alternatives.length < 3) {

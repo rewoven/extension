@@ -5,7 +5,7 @@ export class GenericScraper extends BaseScraper {
   retailerName = 'Unknown';
 
   isProductPage(): boolean {
-    // Check for common product page signals
+
     return !!(
       this.getJsonLd() ||
       document.querySelector('meta[property="og:type"][content="product"]') ||
@@ -16,11 +16,10 @@ export class GenericScraper extends BaseScraper {
   }
 
   extract(): ScrapedProduct | null {
-    // Try JSON-LD first
+
     const jsonLd = this.getJsonLd();
     if (jsonLd) return this.extractFromJsonLd(jsonLd);
 
-    // Try meta tags + DOM scraping
     return this.extractFromDom();
   }
 
@@ -35,7 +34,6 @@ export class GenericScraper extends BaseScraper {
       currency = offer.priceCurrency || 'USD';
     }
 
-    // Try to find material composition in the page
     const materials = this.findMaterialsInPage();
     const brand = data.brand?.name || this.getBrandFromMeta() || 'Unknown';
 
@@ -95,7 +93,7 @@ export class GenericScraper extends BaseScraper {
   }
 
   protected findMaterialsInPage() {
-    // Search for composition text in common locations
+
     const selectors = [
       '[class*="composition" i]',
       '[class*="material" i]',
@@ -116,9 +114,6 @@ export class GenericScraper extends BaseScraper {
       }
     }
 
-    // Brute force: search page text for composition patterns. Use textContent
-    // (not innerText, which forces a layout reflow) and cap the length so this
-    // stays fast even on very large pages.
     const bodyText = (document.body.textContent || '').slice(0, 100000);
     const compositionMatch = bodyText.match(/(?:composition|material|fabric)[:\s]*([^.]*\d+\s*%[^.]*)/i);
     if (compositionMatch) {

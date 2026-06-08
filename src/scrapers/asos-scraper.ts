@@ -38,10 +38,8 @@ export class AsosScraper extends BaseScraper {
       }
     }
 
-    // ASOS puts material info in product details / about me section
     const materials = this.extractMaterials();
 
-    // Extract brand from breadcrumb or product info
     const brand =
       document.querySelector('[data-test-id="product-brand-link"], [class*="brand-link"]')?.textContent?.trim() ||
       'ASOS';
@@ -59,7 +57,7 @@ export class AsosScraper extends BaseScraper {
   }
 
   private extractMaterials() {
-    // ASOS puts material info in product details accordion
+
     const selectors = [
       '[data-test-id="product-details-content"]',
       '.product-description',

@@ -1,7 +1,5 @@
 import type { Grade } from './types';
 
-// Public page explaining how scores/footprints are calculated and the data
-// sources behind the per-fibre coefficients.
 export const METHODOLOGY_URL = 'https://rewovenapp.com/methodology/';
 
 export const SUPPORTED_RETAILERS = [
@@ -49,7 +47,6 @@ export const COLORS = {
   accent: '#4CAF50',
 };
 
-// Average garment weight in kg by category
 export const GARMENT_WEIGHTS: Record<string, number> = {
   top: 0.2,
   bottom: 0.4,
@@ -63,7 +60,6 @@ export const GARMENT_WEIGHTS: Record<string, number> = {
   unknown: 0.3,
 };
 
-// Base number of wears before garment end-of-life
 export const BASE_WEARS: Record<string, number> = {
   top: 80,
   bottom: 120,

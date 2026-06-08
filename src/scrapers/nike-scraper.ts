@@ -13,7 +13,7 @@ export class NikeScraper extends BaseScraper {
   }
 
   extract(): ScrapedProduct | null {
-    // Nike uses Next.js - try __NEXT_DATA__
+
     const nextData = this.getNextData();
     if (nextData) {
       const result = this.extractFromNextData(nextData);
@@ -36,7 +36,7 @@ export class NikeScraper extends BaseScraper {
   private extractFromNextData(data: any): ScrapedProduct | null {
     try {
       const props = data.props?.pageProps;
-      // Nike's structure varies; try common paths
+
       const product =
         props?.product || props?.productData || props?.initialState?.Threads?.products?.[0];
 
@@ -75,7 +75,6 @@ export class NikeScraper extends BaseScraper {
     );
     const { price, currency } = priceEl ? this.parsePrice(priceEl.textContent || '') : { price: 0, currency: 'USD' };
 
-    // Nike shows materials in product description
     const descEl = document.querySelector(
       '[class*="description-preview"], .product-description, [data-test="product-description"]'
     );

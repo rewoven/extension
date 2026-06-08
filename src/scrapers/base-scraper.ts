@@ -7,10 +7,9 @@ export abstract class BaseScraper {
   abstract isProductPage(): boolean;
   abstract extract(): ScrapedProduct | null;
 
-  // Utility: parse "60% Cotton, 40% Polyester" style strings
   protected parseMaterialString(text: string): MaterialComposition[] {
     const materials: MaterialComposition[] = [];
-    // Match patterns like "60% Cotton", "100% organic cotton", etc.
+
     const regex = /(\d+(?:\.\d+)?)\s*%\s*([A-Za-z\s/()-]+)/g;
     let match;
 
@@ -34,9 +33,6 @@ export abstract class BaseScraper {
     return undefined;
   }
 
-  // Utility: detect garment category from product name/breadcrumb.
-  // Uses whole-word matching so "denim wallpaper" / "canteen" / "address"
-  // don't get misclassified as clothing.
   protected detectCategory(text: string): GarmentCategory {
     const lower = text.toLowerCase();
     const hasWord = (kw: string) => {
@@ -63,9 +59,8 @@ export abstract class BaseScraper {
     return 'unknown';
   }
 
-  // Utility: extract price from text
   protected parsePrice(text: string): { price: number; currency: string } {
-    // Match various price formats: $29.99, £19.99, €24.99, AED 99, 29,99€
+
     const match = text.match(/([£$€])\s*([\d,]+\.?\d*)/);
     if (match) {
       const currencyMap: Record<string, string> = { $: 'USD', '£': 'GBP', '€': 'EUR' };
@@ -75,7 +70,6 @@ export abstract class BaseScraper {
       };
     }
 
-    // Try reversed format: 29,99 €
     const match2 = text.match(/([\d,]+\.?\d*)\s*([£$€])/);
     if (match2) {
       const currencyMap: Record<string, string> = { $: 'USD', '£': 'GBP', '€': 'EUR' };
@@ -85,7 +79,6 @@ export abstract class BaseScraper {
       };
     }
 
-    // AED format
     const match3 = text.match(/(?:AED|SAR|KWD)\s*([\d,]+\.?\d*)/);
     if (match3) {
       return { price: parseFloat(match3[1].replace(',', '')), currency: 'AED' };
@@ -94,7 +87,6 @@ export abstract class BaseScraper {
     return { price: 0, currency: 'USD' };
   }
 
-  // Try to get product data from JSON-LD
   protected getJsonLd(): any | null {
     const scripts = document.querySelectorAll('script[type="application/ld+json"]');
     for (const script of scripts) {

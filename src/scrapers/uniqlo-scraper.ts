@@ -13,7 +13,7 @@ export class UniqloScraper extends BaseScraper {
   }
 
   extract(): ScrapedProduct | null {
-    // Uniqlo uses Next.js
+
     const nextData = this.getNextData();
     if (nextData) {
       const result = this.extractFromNextData(nextData);
@@ -70,7 +70,6 @@ export class UniqloScraper extends BaseScraper {
     const priceEl = document.querySelector('[class*="pdp-price"], .product-price, [class*="price-amount"]');
     const { price, currency } = priceEl ? this.parsePrice(priceEl.textContent || '') : { price: 0, currency: 'USD' };
 
-    // Uniqlo shows material in accordion
     const selectors = [
       '[class*="material"], [class*="composition"]',
       '.product-description',

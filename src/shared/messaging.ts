@@ -15,7 +15,7 @@ export function onMessage(
     const result = handler(message, sender);
     if (result instanceof Promise) {
       result.then(sendResponse);
-      return true; // keep the message channel open for async response
+      return true;
     }
     if (result) {
       sendResponse(result);

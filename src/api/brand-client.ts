@@ -1,4 +1,4 @@
-/** Rewoven Brand Rating API client */
+
 
 const API_BASE = 'https://api.rewovenapp.com';
 const TIMEOUT_MS = 5000;
@@ -12,8 +12,7 @@ export interface BrandRating {
   labor_score: number;
   transparency_score: number;
   animal_welfare_score: number;
-  // Display-only fields - optional to reflect API variance. The overlay guards
-  // each one before rendering, so a missing field degrades gracefully.
+
   price_range?: string;
   country?: string;
   category?: string;
@@ -22,11 +21,8 @@ export interface BrandRating {
   website?: string;
 }
 
-// In-memory cache keyed by slug or search query. Values are heterogeneous
-// (single rating, list, alternatives response, or null), so we store unknown
-// and cast on read via the typed getCached<T> helper.
 const cache = new Map<string, { data: unknown; ts: number }>();
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 function getCached<T>(key: string): T | undefined {
   const entry = cache.get(key);
@@ -52,10 +48,6 @@ async function fetchWithTimeout(url: string): Promise<Response> {
   }
 }
 
-/**
- * Fetch a single brand rating by slug.
- * Returns null if the brand is not found or the API is unreachable.
- */
 export async function fetchBrandRating(brandSlug: string): Promise<BrandRating | null> {
   const cacheKey = `brand:${brandSlug}`;
   const cached = getCached<BrandRating | null>(cacheKey);
@@ -82,10 +74,6 @@ export interface AlternativesResponse {
   reason: string;
 }
 
-/**
- * Fetch sustainable alternatives for a brand by slug.
- * Returns null if the brand is not found or the API is unreachable.
- */
 export async function fetchAlternatives(brandSlug: string, limit: number = 5): Promise<AlternativesResponse | null> {
   const cacheKey = `alternatives:${brandSlug}:${limit}`;
   const cached = getCached<AlternativesResponse | null>(cacheKey);
@@ -108,10 +96,6 @@ export async function fetchAlternatives(brandSlug: string, limit: number = 5): P
   }
 }
 
-/**
- * Search for brands by name.
- * Returns an empty array if the API is unreachable or no results are found.
- */
 export async function searchBrand(query: string): Promise<BrandRating[]> {
   const cacheKey = `search:${query.toLowerCase().trim()}`;
   const cached = getCached<BrandRating[]>(cacheKey);

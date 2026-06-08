@@ -4,14 +4,12 @@ import { DEFAULT_SETTINGS } from '../shared/types';
 const enabledToggle = document.getElementById('enabled-toggle') as HTMLInputElement;
 const positionSelect = document.getElementById('position-select') as HTMLSelectElement;
 
-// Load settings
 chrome.storage.sync.get('settings', (data) => {
   const settings: UserSettings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
   enabledToggle.checked = settings.enabled;
   positionSelect.value = settings.overlayPosition;
 });
 
-// Save settings on change
 enabledToggle.addEventListener('change', () => {
   updateSetting({ enabled: enabledToggle.checked });
 });

@@ -1,10 +1,7 @@
-/**
- * Detect the brand from the current page URL / domain.
- * Maps common fashion retailer domains to their API slug.
- */
+
 
 const DOMAIN_TO_SLUG: Record<string, string> = {
-  // Fast fashion
+
   'zara.com': 'zara',
   'hm.com': 'h-m',
   'www2.hm.com': 'h-m',
@@ -19,7 +16,6 @@ const DOMAIN_TO_SLUG: Record<string, string> = {
   'cider.com': 'cider',
   'emmiol.com': 'emmiol',
 
-  // Mid-range / high street
   'nike.com': 'nike',
   'adidas.com': 'adidas',
   'gap.com': 'gap',
@@ -69,7 +65,6 @@ const DOMAIN_TO_SLUG: Record<string, string> = {
   'massimo dutti.com': 'massimo-dutti',
   'massimodutti.com': 'massimo-dutti',
 
-  // Sustainable / ethical brands
   'patagonia.com': 'patagonia',
   'everlane.com': 'everlane',
   'thereformation.com': 'reformation',
@@ -88,7 +83,6 @@ const DOMAIN_TO_SLUG: Record<string, string> = {
   'nudiejeans.com': 'nudie-jeans',
   'stellamccartney.com': 'stella-mccartney',
 
-  // Luxury
   'gucci.com': 'gucci',
   'louisvuitton.com': 'louis-vuitton',
   'prada.com': 'prada',
@@ -100,32 +94,19 @@ const DOMAIN_TO_SLUG: Record<string, string> = {
   'hermes.com': 'hermes',
   'armani.com': 'armani',
 
-  // Outdoor / activewear
   'thenorthface.com': 'the-north-face',
   'columbia.com': 'columbia',
   'rei.com': 'rei',
   'arcteryx.com': 'arcteryx',
 };
 
-/**
- * Try to detect a brand slug from the current page hostname.
- *
- * Only matches against the curated fashion-retailer map. We deliberately do
- * NOT derive a slug from arbitrary domains or page titles \u2014 doing so produced
- * garbage lookups (e.g. apple.com -> "apple") that hit the API for non-fashion
- * sites. For unknown fashion sites we instead search the API by the scraped
- * brand name (see content/index.ts), which naturally returns nothing for
- * non-apparel brands.
- */
 export function detectBrandSlug(hostname: string): string | null {
   const host = hostname.toLowerCase().replace(/^www\./, '');
 
-  // Direct domain match
   if (DOMAIN_TO_SLUG[host]) {
     return DOMAIN_TO_SLUG[host];
   }
 
-  // Check if any known domain is a suffix of the hostname (handles subdomains)
   for (const [domain, slug] of Object.entries(DOMAIN_TO_SLUG)) {
     if (host === domain || host.endsWith('.' + domain)) {
       return slug;
@@ -135,10 +116,6 @@ export function detectBrandSlug(hostname: string): string | null {
   return null;
 }
 
-/**
- * Is this hostname a known fashion retailer? Used as a strong "this is a
- * fashion website" signal by the apparel gate.
- */
 export function isKnownFashionDomain(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^www\./, '');
   if (DOMAIN_TO_SLUG[host]) return true;

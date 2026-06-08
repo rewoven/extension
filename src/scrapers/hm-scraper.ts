@@ -14,11 +14,10 @@ export class HmScraper extends BaseScraper {
   }
 
   extract(): ScrapedProduct | null {
-    // H&M uses Next.js - try __NEXT_DATA__ first
+
     const nextData = this.getNextData();
     if (nextData) return this.extractFromNextData(nextData);
 
-    // Fallback to DOM
     return this.extractFromDom();
   }
 
@@ -34,7 +33,7 @@ export class HmScraper extends BaseScraper {
 
   private extractFromNextData(data: any): ScrapedProduct | null {
     try {
-      // Navigate H&M's Next.js data structure
+
       const props = data.props?.pageProps;
       const product = props?.product || props?.productData || props?.mainProduct;
 
@@ -44,7 +43,6 @@ export class HmScraper extends BaseScraper {
       const price = parseFloat(product.price?.value || product.whitePrice?.price || '0');
       const currency = product.price?.currencyIso || 'USD';
 
-      // H&M composition data
       let materials = this.parseMaterialString(
         product.compositions?.map((c: any) => c.materials?.map((m: any) => `${m.percentage}% ${m.name}`).join(', ')).join(', ') || ''
       );
@@ -77,7 +75,6 @@ export class HmScraper extends BaseScraper {
     const priceEl = document.querySelector('[class*="ProductPrice"], [class*="product-price"], .price');
     const { price, currency } = priceEl ? this.parsePrice(priceEl.textContent || '') : { price: 0, currency: 'USD' };
 
-    // H&M composition section
     const materials = this.extractMaterials();
 
     return {

@@ -5,11 +5,9 @@ import { getBrandRating, getBrandModifier } from './brand-ratings';
 import { calculateCostPerWear } from './cost-per-wear';
 import { getAlternatives, getTips } from './alternatives';
 
-// Max values for normalization (worst case fibers)
-const MAX_CO2 = 28.0;   // cashmere
-const MAX_WATER = 20000; // cashmere
+const MAX_CO2 = 28.0;
+const MAX_WATER = 20000;
 
-// Scoring weights
 const W_CARBON = 0.35;
 const W_WATER = 0.25;
 const W_DURABILITY = 0.20;
@@ -27,7 +25,6 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
   const { materials, category, price, brand } = product;
   const garmentWeight = GARMENT_WEIGHTS[category] || GARMENT_WEIGHTS.unknown;
 
-  // Calculate weighted environmental metrics - ONLY from recognised fibres.
   let weightedCO2 = 0;
   let weightedWater = 0;
   let weightedDurability = 0;
@@ -37,8 +34,7 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
   const materialBreakdown: ScoringResult['materialBreakdown'] = [];
 
   for (const mat of materials) {
-    // 'unknown' has a placeholder DB entry - never let it produce a real
-    // footprint. Only genuinely identified fibres count.
+
     if (mat.fiber === 'unknown') continue;
     const impact = MATERIAL_DATABASE[mat.fiber];
     if (!impact) continue;
@@ -62,9 +58,6 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
     });
   }
 
-  // NO MATERIALS FOUND → we do not invent a footprint. Return a result with
-  // everything environmental set to null. The overlay shows an honest
-  // "composition not listed" state (and may still show the real brand rating).
   if (totalPct === 0) {
     return {
       materialsKnown: false,
@@ -81,8 +74,6 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
     };
   }
 
-  // Normalise weighted metrics to the recognised portion so a partial match
-  // (e.g. only 60% identified) isn't understated.
   if (totalPct > 0 && totalPct < 100) {
     const scale = 100 / totalPct;
     weightedCO2 *= scale;
@@ -91,7 +82,6 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
     biodegPenalty *= scale;
   }
 
-  // Calculate composite score (0-100, lower = better)
   const carbonScore = (weightedCO2 / MAX_CO2) * 100;
   const waterScore = (weightedWater / MAX_WATER) * 100;
   const durabilityScore = (1 - weightedDurability / 10) * 100;
@@ -103,14 +93,11 @@ export function scoreProduct(product: ScrapedProduct): ScoringResult {
     W_DURABILITY * durabilityScore +
     W_BIODEG * biodegScore;
 
-  // Brand modifier
   const brandMod = getBrandModifier(brand);
   compositeScore += W_BRAND * brandMod * 10;
 
-  // Clamp to 0-100
   compositeScore = Math.max(0, Math.min(100, compositeScore));
 
-  // Absolute footprint estimates for this garment
   const co2Estimate = Math.round(weightedCO2 * garmentWeight * 100) / 100;
   const waterEstimate = Math.round(weightedWater * garmentWeight);
 

@@ -56,7 +56,7 @@ export class SheinScraper extends BaseScraper {
   }
 
   private extractMaterials() {
-    // SHEIN shows materials in product description section
+
     const selectors = [
       '.product-intro__description-table',
       '[class*="product-intro__description"]',

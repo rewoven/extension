@@ -1,9 +1,7 @@
 import type { BrandInfo } from '../shared/types';
 
-// Brand sustainability ratings based on public indices
-// Rating: 1 (worst) to 5 (best)
 const BRAND_DATABASE: Record<string, BrandInfo> = {
-  // Fast fashion - generally poor
+
   zara: {
     name: 'Zara',
     rating: 2.5,
@@ -47,7 +45,6 @@ const BRAND_DATABASE: Record<string, BrandInfo> = {
     concerns: ['History of labor violations', 'Fast fashion business model', 'Low quality garments'],
   },
 
-  // Mid-range
   nike: {
     name: 'Nike',
     rating: 3,
@@ -91,7 +88,6 @@ const BRAND_DATABASE: Record<string, BrandInfo> = {
     concerns: ['Department store model means mixed sustainability', 'Own brands lack transparency'],
   },
 
-  // Sustainable brands (for alternatives)
   patagonia: {
     name: 'Patagonia',
     rating: 5,
@@ -132,9 +128,9 @@ const BRAND_DATABASE: Record<string, BrandInfo> = {
 
 export function getBrandRating(brand: string): BrandInfo | undefined {
   const key = brand.toLowerCase().replace(/[^a-z0-9&]/g, '');
-  // Direct match
+
   if (BRAND_DATABASE[key]) return BRAND_DATABASE[key];
-  // Partial match
+
   for (const [dbKey, info] of Object.entries(BRAND_DATABASE)) {
     if (key.includes(dbKey) || dbKey.includes(key)) return info;
   }
@@ -144,6 +140,6 @@ export function getBrandRating(brand: string): BrandInfo | undefined {
 export function getBrandModifier(brand: string): number {
   const info = getBrandRating(brand);
   if (!info) return 0;
-  // Rating 1-5 maps to modifier +10 to -10
+
   return (3 - info.rating) * 5;
 }
