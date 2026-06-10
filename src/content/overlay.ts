@@ -3,6 +3,9 @@ import { GRADE_COLORS, METHODOLOGY_URL } from '../shared/constants';
 import { getCostPerWearLabel } from '../scoring/cost-per-wear';
 import type { BrandRating } from '../api/brand-client';
 import { fetchAlternatives } from '../api/brand-client';
+import { addHiddenSite } from '../shared/hidden-sites';
+
+export type OverlayPosition = 'left' | 'right';
 
 const ROOT_ID = 'rewoven-lens-root';
 let shadowRoot: ShadowRoot | null = null;
@@ -15,20 +18,22 @@ export function removeOverlay() {
   isExpanded = false;
 }
 
-export function createOverlay(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null) {
+export function createOverlay(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null, position: OverlayPosition = 'right') {
   removeOverlay();
 
   const host = document.createElement('div');
   host.id = ROOT_ID;
-  host.style.cssText = 'all: initial; position: fixed; z-index: 2147483647; top: 0; right: 0; height: 100vh; pointer-events: none;';
+  const sideCss = position === 'left' ? 'left: 0;' : 'right: 0;';
+  host.style.cssText = `all: initial; position: fixed; z-index: 2147483647; top: 0; ${sideCss} height: 100vh; pointer-events: none;`;
   document.body.appendChild(host);
 
   shadowRoot = host.attachShadow({ mode: 'open' });
-  shadowRoot.innerHTML = getOverlayHTML(result, product, apiBrandRating);
+  shadowRoot.innerHTML = getOverlayHTML(result, product, apiBrandRating, position);
 
   const badge = shadowRoot.querySelector('.rw-badge') as HTMLElement;
   const panel = shadowRoot.querySelector('.rw-panel') as HTMLElement;
   const closeBtn = shadowRoot.querySelector('.rw-close') as HTMLElement;
+  const hideBtn = shadowRoot.querySelector('.rw-hide-site') as HTMLElement;
 
   badge?.addEventListener('click', () => {
     isExpanded = !isExpanded;
@@ -40,6 +45,11 @@ export function createOverlay(result: ScoringResult, product: ScrapedProduct, ap
     isExpanded = false;
     if (panel) panel.classList.remove('expanded');
     if (badge) badge.classList.remove('hidden');
+  });
+
+  hideBtn?.addEventListener('click', async () => {
+    await addHiddenSite(window.location.hostname);
+    removeOverlay();
   });
 
   if (apiBrandRating && apiBrandRating.overall_score < 70) {
@@ -62,10 +72,11 @@ async function loadApiAlternatives(brandSlug: string) {
       .map((a) => {
         const meta = [a.category, a.price_range].filter(Boolean).map((x) => escapeHtml(x)).join(' · ');
         const delta = a.overall_score - origScore;
-        return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#F0FDF4;border-radius:8px;margin-bottom:6px;border:1px solid #D1FAE5;">
+        const href = linkableUrl(a.website);
+        const card = `
+      <div class="rw-api-alt-card" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#F0FDF4;border-radius:8px;margin-bottom:6px;border:1px solid #D1FAE5;">
         <div>
-          <div style="font-size:13px;font-weight:700;color:#1A1A1A;">${escapeHtml(a.name)}</div>
+          <div style="font-size:13px;font-weight:700;color:#1A1A1A;">${escapeHtml(a.name)}${href ? '<span class="rw-alt-arrow">↗</span>' : ''}</div>
           ${meta ? `<div style="font-size:11px;color:#666;">${meta}</div>` : ''}
         </div>
         <div style="text-align:right;">
@@ -73,6 +84,9 @@ async function loadApiAlternatives(brandSlug: string) {
           ${delta > 0 ? `<div style="font-size:10px;color:#059669;font-weight:600;">+${delta} pts</div>` : ''}
         </div>
       </div>`;
+        return href
+          ? `<a class="rw-alt-link" href="${escapeAttr(href)}" target="_blank" rel="noopener">${card}</a>`
+          : card;
       })
       .join('');
 
@@ -82,11 +96,11 @@ async function loadApiAlternatives(brandSlug: string) {
   }
 }
 
-export function updateOverlay(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null) {
+export function updateOverlay(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null, position: OverlayPosition = 'right') {
   if (shadowRoot) {
-    shadowRoot.innerHTML = getOverlayHTML(result, product, apiBrandRating);
+    shadowRoot.innerHTML = getOverlayHTML(result, product, apiBrandRating, position);
   } else {
-    createOverlay(result, product, apiBrandRating);
+    createOverlay(result, product, apiBrandRating, position);
   }
 }
 
@@ -99,7 +113,8 @@ function mapApiGrade(apiGrade: string): Grade {
   return 'F';
 }
 
-function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null): string {
+function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrandRating?: BrandRating | null, position: OverlayPosition = 'right'): string {
+  const isLeft = position === 'left';
 
   const displayGrade: Grade =
     result.materialsKnown && result.grade
@@ -171,11 +186,11 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       .rw-badge {
         position: fixed;
         top: 50%;
-        right: 0;
+        ${isLeft ? 'left' : 'right'}: 0;
         transform: translateY(-50%);
         width: 52px;
         height: 52px;
-        border-radius: 12px 0 0 12px;
+        border-radius: ${isLeft ? '0 12px 12px 0' : '12px 0 0 12px'};
         background: ${gradeColor.bg};
         color: ${gradeColor.text};
         display: flex;
@@ -185,39 +200,39 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
         font-weight: 800;
         cursor: pointer;
         pointer-events: all;
-        box-shadow: -2px 2px 12px rgba(0,0,0,0.2);
+        box-shadow: ${isLeft ? '2px' : '-2px'} 2px 12px rgba(0,0,0,0.2);
         transition: all 0.3s ease;
         z-index: 10;
       }
       .rw-badge:hover {
         width: 60px;
-        box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
+        box-shadow: ${isLeft ? '4px' : '-4px'} 4px 20px rgba(0,0,0,0.3);
       }
       .rw-badge.hidden { display: none; }
       .rw-badge::after {
         content: '🌿';
         position: absolute;
         top: -6px;
-        left: -6px;
+        ${isLeft ? 'right' : 'left'}: -6px;
         font-size: 14px;
       }
 
       .rw-panel {
         position: fixed;
         top: 50%;
-        right: -360px;
+        ${isLeft ? 'left' : 'right'}: -360px;
         transform: translateY(-50%);
         width: 340px;
         max-height: 85vh;
         background: #FFFFFF;
-        border-radius: 16px 0 0 16px;
-        box-shadow: -4px 0 30px rgba(0,0,0,0.15);
+        border-radius: ${isLeft ? '0 16px 16px 0' : '16px 0 0 16px'};
+        box-shadow: ${isLeft ? '4px' : '-4px'} 0 30px rgba(0,0,0,0.15);
         overflow-y: auto;
         pointer-events: all;
-        transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: ${isLeft ? 'left' : 'right'} 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         z-index: 9;
       }
-      .rw-panel.expanded { right: 0; }
+      .rw-panel.expanded { ${isLeft ? 'left' : 'right'}: 0; }
       .rw-panel::-webkit-scrollbar { width: 4px; }
       .rw-panel::-webkit-scrollbar-thumb { background: #C8E6C9; border-radius: 4px; }
 
@@ -479,6 +494,25 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
         color: #666;
         margin-top: 2px;
       }
+      .rw-alt-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+      }
+      .rw-alt-link .rw-alt-item,
+      .rw-alt-link .rw-api-alt-card {
+        transition: background 0.2s ease, border-color 0.2s ease;
+      }
+      .rw-alt-link:hover .rw-alt-item { background: #E8F5E9; }
+      .rw-alt-link:hover .rw-api-alt-card { background: #DCFCE7 !important; border-color: #86EFAC !important; }
+      .rw-alt-arrow {
+        font-size: 11px;
+        color: #2E7D32;
+        margin-left: 4px;
+        opacity: 0.6;
+      }
+      .rw-alt-link:hover .rw-alt-arrow { opacity: 1; }
 
       .rw-tip {
         font-size: 12px;
@@ -499,6 +533,18 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
         color: #2E7D32;
         text-decoration: none;
       }
+      .rw-hide-site {
+        display: block;
+        margin: 8px auto 0;
+        padding: 0;
+        background: none;
+        border: none;
+        font-size: 10px;
+        color: #999;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .rw-hide-site:hover { color: #D32F2F; }
     </style>
 
     <div class="rw-badge">${displayGrade}</div>
@@ -589,12 +635,17 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
       ${result.alternatives.length > 0 ? `
       <div class="rw-section">
         <div class="rw-section-title">🔄 Sustainable Alternatives</div>
-        ${result.alternatives.map((a) => `
+        ${result.alternatives.map((a) => {
+          const href = linkableUrl(a.url);
+          const item = `
           <div class="rw-alt-item">
-            <div class="rw-alt-name">${escapeHtml(a.brandName)}</div>
+            <div class="rw-alt-name">${escapeHtml(a.brandName)}${href ? '<span class="rw-alt-arrow">↗</span>' : ''}</div>
             <div class="rw-alt-reason">${escapeHtml(a.reason)}</div>
-          </div>
-        `).join('')}
+          </div>`;
+          return href
+            ? `<a class="rw-alt-link" href="${escapeAttr(href)}" target="_blank" rel="noopener">${item}</a>`
+            : item;
+        }).join('')}
       </div>
       ` : ''}
 
@@ -612,6 +663,7 @@ function getOverlayHTML(result: ScoringResult, product: ScrapedProduct, apiBrand
 
       <div class="rw-footer">
         ${footerNote}<a href="${METHODOLOGY_URL}" target="_blank" rel="noopener">How is this calculated?</a> · Powered by <a href="https://rewovenapp.com" target="_blank" rel="noopener">Rewoven</a>
+        <button class="rw-hide-site" type="button" title="Stop showing Rewoven on ${escapeAttr(window.location.hostname)}">Hide on this site</button>
       </div>
     </div>
   `;
@@ -644,6 +696,16 @@ function escapeHtml(str: unknown): string {
   const div = document.createElement('div');
   div.textContent = str == null ? '' : String(str);
   return div.innerHTML;
+}
+
+function escapeAttr(str: unknown): string {
+  return escapeHtml(str).replace(/"/g, '&quot;');
+}
+
+function linkableUrl(url: string | undefined | null): string | null {
+  if (typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : null;
 }
 
 function formatFiberName(fiber: string): string {

@@ -2,6 +2,7 @@ import { getScraperForSite } from '../scrapers/scraper-registry';
 import { isApparelContext } from '../scrapers/apparel-detector';
 import type { UserSettings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
+import { getHiddenSites, isSiteHidden } from '../shared/hidden-sites';
 import { createOverlay, removeOverlay } from './overlay';
 import { scoreProduct } from '../scoring/sustainability-engine';
 import { detectBrandSlug } from '../api/brand-detector';
@@ -45,13 +46,20 @@ try {
 }
 
 async function tryScrapePage() {
+  const hostname = window.location.hostname.toLowerCase();
+
+  const hiddenSites = await getHiddenSites();
+  if (isSiteHidden(hostname, hiddenSites)) {
+    removeOverlay();
+    return;
+  }
+
   const settings = await getSettings();
   if (!settings.enabled) {
     removeOverlay();
     return;
   }
 
-  const hostname = window.location.hostname.toLowerCase();
   if (settings.disabledSites.some((s) => hostname.includes(s))) {
     removeOverlay();
     return;
@@ -117,7 +125,7 @@ async function tryScrapePage() {
     return;
   }
 
-  createOverlay(result, product, apiBrandRating);
+  createOverlay(result, product, apiBrandRating, settings.overlayPosition);
 }
 
 function onUrlChange(force = false) {
@@ -130,15 +138,22 @@ function onUrlChange(force = false) {
   scrapeTimeout = setTimeout(tryScrapePage, 1200);
 }
 
-setTimeout(tryScrapePage, 1200);
+async function init() {
+  const hiddenSites = await getHiddenSites();
+  if (isSiteHidden(window.location.hostname, hiddenSites)) return;
 
-const fireNav = () => onUrlChange();
-window.addEventListener('popstate', fireNav);
-window.addEventListener('hashchange', fireNav);
+  setTimeout(tryScrapePage, 1200);
 
-const titleEl = document.querySelector('title');
-if (titleEl) {
-  new MutationObserver(fireNav).observe(titleEl, { childList: true, characterData: true, subtree: true });
+  const fireNav = () => onUrlChange();
+  window.addEventListener('popstate', fireNav);
+  window.addEventListener('hashchange', fireNav);
+
+  const titleEl = document.querySelector('title');
+  if (titleEl) {
+    new MutationObserver(fireNav).observe(titleEl, { childList: true, characterData: true, subtree: true });
+  }
+
+  setInterval(fireNav, 2000);
 }
 
-setInterval(fireNav, 2000);
+init();

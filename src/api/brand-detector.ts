@@ -100,6 +100,8 @@ const DOMAIN_TO_SLUG: Record<string, string> = {
   'arcteryx.com': 'arcteryx',
 };
 
+export const KNOWN_FASHION_DOMAINS: string[] = Object.keys(DOMAIN_TO_SLUG);
+
 export function detectBrandSlug(hostname: string): string | null {
   const host = hostname.toLowerCase().replace(/^www\./, '');
 
