@@ -1,5 +1,5 @@
 import { getScraperForSite } from '../scrapers/scraper-registry';
-import { isApparelContext } from '../scrapers/apparel-detector';
+import { isApparelContext, isGeneralMarketplace } from '../scrapers/apparel-detector';
 import type { UserSettings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { getHiddenSites, isSiteHidden } from '../shared/hidden-sites';
@@ -103,7 +103,13 @@ async function tryScrapePage() {
   let apiBrandRating: BrandRating | null = null;
   try {
     const slug = detectBrandSlug(hostname);
-    if (slug) {
+    const onMarketplace = isGeneralMarketplace(hostname);
+
+    if (onMarketplace && product.brand && product.brand !== 'Unknown') {
+      const results = await searchBrand(product.brand);
+      if (results.length > 0) apiBrandRating = results[0];
+    }
+    if (!apiBrandRating && slug) {
       apiBrandRating = await fetchBrandRating(slug);
     }
     if (!apiBrandRating && product.brand && product.brand !== 'Unknown') {

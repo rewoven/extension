@@ -34,8 +34,11 @@ export class GenericScraper extends BaseScraper {
       currency = offer.priceCurrency || 'USD';
     }
 
-    const materials = this.findMaterialsInPage();
-    const brand = data.brand?.name || this.getBrandFromMeta() || 'Unknown';
+    let materials = this.findMaterialsInPage();
+    if (materials.length === 0 && typeof data.material === 'string') {
+      materials = this.parseMaterialString(data.material);
+    }
+    const brand = (typeof data.brand === 'string' ? data.brand : data.brand?.name) || this.getBrandFromMeta() || 'Unknown';
 
     if (!name) return null;
 
@@ -45,7 +48,7 @@ export class GenericScraper extends BaseScraper {
       currency,
       materials,
       brand,
-      category: this.detectCategory(name),
+      category: this.detectCategory(`${name} ${this.breadcrumbText()}`),
       imageUrl: data.image?.[0] || data.image || undefined,
       url: window.location.href,
     };
@@ -86,7 +89,7 @@ export class GenericScraper extends BaseScraper {
       currency,
       materials,
       brand,
-      category: this.detectCategory(name),
+      category: this.detectCategory(`${name} ${this.breadcrumbText()}`),
       imageUrl: document.querySelector('meta[property="og:image"]')?.getAttribute('content') || undefined,
       url: window.location.href,
     };
@@ -122,6 +125,14 @@ export class GenericScraper extends BaseScraper {
     }
 
     return [];
+  }
+
+  protected breadcrumbText(): string {
+    let t = '';
+    document
+      .querySelectorAll('[class*="breadcrumb" i], [id*="breadcrumb" i], [data-testid*="breadcrumb" i], nav[aria-label*="readcrumb" i]')
+      .forEach((e) => { t += ' ' + (e.textContent || ''); });
+    return t;
   }
 
   private getBrandFromMeta(): string | null {

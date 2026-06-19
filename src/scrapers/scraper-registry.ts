@@ -6,6 +6,7 @@ import { AsosScraper } from './asos-scraper';
 import { NikeScraper } from './nike-scraper';
 import { SheinScraper } from './shein-scraper';
 import { UniqloScraper } from './uniqlo-scraper';
+import { AmazonScraper } from './amazon-scraper';
 
 interface ScraperEntry {
   patterns: string[];
@@ -19,6 +20,7 @@ const REGISTRY: ScraperEntry[] = [
   { patterns: ['nike.com'], Scraper: NikeScraper },
   { patterns: ['shein.com'], Scraper: SheinScraper },
   { patterns: ['uniqlo.com'], Scraper: UniqloScraper },
+  { patterns: ['amazon.'], Scraper: AmazonScraper },
 ];
 
 export function getScraperForSite(): BaseScraper {

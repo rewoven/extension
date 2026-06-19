@@ -9,6 +9,7 @@ const CLOTHING_CATEGORIES = new Set([
 
 const GENERAL_MARKETPLACES = [
   'amazon.', 'walmart.com', 'target.com', 'ebay.', 'etsy.com', 'aliexpress.', 'wish.com',
+  'temu.com', 'macys.com', 'nordstrom.com',
 ];
 
 const APPAREL_KEYWORDS = [
@@ -53,7 +54,7 @@ function pageTextSignals(): { apparel: boolean; nonApparel: boolean } {
   const hay: string[] = [];
 
   document
-    .querySelectorAll('[class*="breadcrumb" i], nav[aria-label*="readcrumb" i], [itemtype*="BreadcrumbList"]')
+    .querySelectorAll('[class*="breadcrumb" i], [id*="breadcrumb" i], [data-testid*="breadcrumb" i], nav[aria-label*="readcrumb" i], [itemtype*="BreadcrumbList"], #wayfinding-breadcrumbs_feature_div')
     .forEach((el) => hay.push((el.textContent || '').toLowerCase()));
 
   document.querySelectorAll('script[type="application/ld+json"]').forEach((s) => {
@@ -77,7 +78,7 @@ function pageTextSignals(): { apparel: boolean; nonApparel: boolean } {
   };
 }
 
-function isGeneralMarketplace(hostname: string): boolean {
+export function isGeneralMarketplace(hostname: string): boolean {
   const host = hostname.toLowerCase();
   return GENERAL_MARKETPLACES.some((d) => host.includes(d));
 }

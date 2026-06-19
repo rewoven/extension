@@ -6,6 +6,7 @@ const DOMAIN_TO_SLUG: Record<string, string> = {
   'hm.com': 'h-m',
   'www2.hm.com': 'h-m',
   'shein.com': 'shein',
+  'temu.com': 'temu',
   'boohoo.com': 'boohoo',
   'prettylittlething.com': 'prettylittlething',
   'fashionnova.com': 'fashion-nova',
