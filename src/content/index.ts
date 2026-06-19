@@ -39,6 +39,10 @@ try {
     if (area === 'sync' && changes.settings) {
       cachedSettings = { ...DEFAULT_SETTINGS, ...(changes.settings.newValue || {}) };
       settingsLoaded = true;
+      if (!cachedSettings.enabled) {
+        removeOverlay();
+        return;
+      }
       onUrlChange(true);
     }
   });
